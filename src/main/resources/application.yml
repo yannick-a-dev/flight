@@ -1,0 +1,48 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: flight-management
+  datasource:
+    url: jdbc:mysql://localhost:3306/flights?useUnicode=true&characterEncoding=UTF-8
+    username: user
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: HikariCP
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: flight-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+jwt:
+  secret: "your-256-bit-secret-your-256-bit-secret"
+  accessToken:
+    expiration: 900000
+  refreshToken:
+    expiration: 604800000
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+cors:
+  allowed-origins: http://localhost:4200
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: Authorization,Content-Type
+
