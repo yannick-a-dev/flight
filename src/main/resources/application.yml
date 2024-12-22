@@ -30,7 +30,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 jwt:
-  secret: "your-256-bit-secret-your-256-bit-secret"
+  secret: "kC7g8VvePaKZ6FSrkL0O3pNEakjWwRRU8GJ0aM1cyYwpWs22cD/sGfVrmF84l9ptIPlv6Fh7xn2OxAQgZ9yH/JhKLmpeXhWwXyXhUq6uW/k="
   accessToken:
     expiration: 900000
   refreshToken:

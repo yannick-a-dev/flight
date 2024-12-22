@@ -31,8 +31,7 @@ public class JwtService {
     }
 
     private Key getSigningKey() {
-        logger.debug("Getting signing key using secret key");
-        return Keys.hmacShaKeyFor(secretKey.getBytes());
+        return Keys.secretKeyFor(SignatureAlgorithm.HS512);
     }
 
     // **Générer un token d'accès**
@@ -42,7 +41,7 @@ public class JwtService {
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -53,7 +52,7 @@ public class JwtService {
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -117,5 +116,9 @@ public class JwtService {
         boolean isValid = (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
         logger.info("Token validation result: {}", isValid);
         return isValid;
+    }
+
+    public long getAccessTokenExpiry() {
+        return accessTokenExpiration;
     }
 }

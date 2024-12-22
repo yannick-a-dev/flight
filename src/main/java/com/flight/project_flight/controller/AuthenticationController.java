@@ -4,13 +4,11 @@ import com.flight.project_flight.dto.*;
 import com.flight.project_flight.service.AuthService;
 import com.flight.project_flight.config.JwtService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,23 +33,26 @@ public class AuthenticationController {
         try {
             String accessToken = authService.authenticateAndGenerateToken(request.getUsername(), request.getPassword());
             String refreshToken = jwtService.generateRefreshToken(request.getUsername());
-            return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
+            String expiresIn = String.valueOf(jwtService.getAccessTokenExpiry()); // Méthode pour récupérer la durée de validité
+            return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken, expiresIn));
         } catch (BadCredentialsException e) {
             logger.error("Authentication failed for user {}: {}", request.getUsername(), e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new TokenResponse("Authentication failed", null)); // Generic message in production
+                    .body(new TokenResponse("Authentication failed", null, null)); // Generic message in production
         } catch (Exception e) {
             logger.error("Internal server error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new TokenResponse("Internal server error", null)); // Generic message in production
+                    .body(new TokenResponse("Internal server error", null, null)); // Generic message in production
         }
     }
+
 
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         String newAccessToken = jwtService.refreshAccessToken(request.getRefreshToken());
         String newRefreshToken = jwtService.generateRefreshToken(jwtService.extractUsername(request.getRefreshToken()));
-        return ResponseEntity.ok(new TokenResponse(newAccessToken, newRefreshToken));
+        String expiresIn = String.valueOf(jwtService.getAccessTokenExpiry());
+        return ResponseEntity.ok(new TokenResponse(newAccessToken, newRefreshToken, expiresIn));
     }
 
 
