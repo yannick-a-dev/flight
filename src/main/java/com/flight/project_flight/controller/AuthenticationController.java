@@ -1,15 +1,15 @@
 package com.flight.project_flight.controller;
 
-import com.flight.project_flight.dto.LoginRequest;
-import com.flight.project_flight.dto.PermissionsResponse;
-import com.flight.project_flight.dto.RefreshTokenRequest;
-import com.flight.project_flight.dto.TokenResponse;
+import com.flight.project_flight.dto.*;
 import com.flight.project_flight.service.AuthService;
 import com.flight.project_flight.config.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +19,8 @@ import java.util.List;
 @RequestMapping("/auth")
 public class AuthenticationController {
 
+    Logger logger = LoggerFactory.getLogger(getClass());
+
     private final AuthService authService;
     private final JwtService jwtService;
 
@@ -27,31 +29,24 @@ public class AuthenticationController {
         this.jwtService = jwtService;
     }
 
-    // **Connexion utilisateur**
-    @PostMapping("/login")
+
+    @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
         try {
-            // Authentification et génération du token d'accès
             String accessToken = authService.authenticateAndGenerateToken(request.getUsername(), request.getPassword());
-
-            // Génération du token de rafraîchissement
             String refreshToken = jwtService.generateRefreshToken(request.getUsername());
-
-            // Réponse avec les tokens
             return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
-        } catch (AuthenticationException e) {
-            // Gestion des erreurs d'authentification
+        } catch (BadCredentialsException e) {
+            logger.error("Authentication failed for user {}: {}", request.getUsername(), e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new TokenResponse("Authentication failed: " + e.getMessage(), null));
+                    .body(new TokenResponse("Authentication failed", null)); // Generic message in production
         } catch (Exception e) {
-            // Gestion des autres erreurs
+            logger.error("Internal server error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new TokenResponse("Internal server error: " + e.getMessage(), null));
+                    .body(new TokenResponse("Internal server error", null)); // Generic message in production
         }
     }
 
-
-    // **Rafraîchir le token**
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         String newAccessToken = jwtService.refreshAccessToken(request.getRefreshToken());
@@ -59,11 +54,25 @@ public class AuthenticationController {
         return ResponseEntity.ok(new TokenResponse(newAccessToken, newRefreshToken));
     }
 
-    // **Vérifier les permissions**
+
     @GetMapping("/permissions")
-    public ResponseEntity<PermissionsResponse> checkPermissions() {
-        String username = authService.getCurrentUsername();
-        List<String> roles = authService.getUserRoles(username);
-        return ResponseEntity.ok(new PermissionsResponse(username, roles));
+    public ResponseEntity<?> checkPermissions() {
+        try {
+            String username = authService.getCurrentUsername();
+            if (username == null) {
+                throw new BadCredentialsException("User not authenticated");
+            }
+            List<String> roles = authService.getUserRoles(username);
+            return ResponseEntity.ok(new PermissionsResponse(username, roles));
+        } catch (BadCredentialsException e) {
+            logger.warn("Permission check failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse("Access denied", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error while checking permissions: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Internal server error", "Please try again later"));
+        }
     }
+
 }

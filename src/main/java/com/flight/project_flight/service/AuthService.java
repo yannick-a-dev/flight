@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -29,23 +30,19 @@ public class AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserService userService;
     private final UserRepository userRepository;
 
     @Autowired
     public AuthService(AuthenticationManager authenticationManager,
                        JwtTokenProvider jwtTokenProvider,
-                       UserRepository userRepository) {
+                       UserService userService, UserRepository userRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.userService = userService;
         this.userRepository = userRepository;
     }
 
-    /**
-     * Authentifie un utilisateur et génère un token JWT.
-     * @param username Nom d'utilisateur
-     * @param password Mot de passe
-     * @return Le token JWT généré
-     */
     public String authenticateAndGenerateToken(String username, String password) {
         try {
             // Authentification via AuthenticationManager
@@ -53,38 +50,29 @@ public class AuthService {
                     new UsernamePasswordAuthenticationToken(username, password)
             );
 
-            // Charger l'utilisateur depuis la base de données
-            UserEntity userEntity = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+            // Charger l'utilisateur depuis le UserService
+            User userEntity = userService.loadUserByUsername(username);
 
             // Génération du token JWT avec les informations de l'utilisateur
-            return jwtTokenProvider.generateToken((UserDetails) userEntity);
+            return jwtTokenProvider.generateToken(userEntity);
 
         } catch (AuthenticationException e) {
             throw new RuntimeException("Authentication failed: " + e.getMessage());
         }
     }
 
-    /**
-     * Récupère le nom d'utilisateur de l'utilisateur authentifié.
-     * @return Le nom d'utilisateur
-     */
     public String getCurrentUsername() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
-    /**
-     * Récupère les rôles de l'utilisateur donné.
-     * @param username Nom d'utilisateur
-     * @return Liste des rôles de l'utilisateur
-     */
     public List<String> getUserRoles(String username) {
         // Charger l'utilisateur depuis la base de données pour récupérer ses rôles
         UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
 
+        // Récupérer les rôles de l'utilisateur
         return userEntity.getRoles().stream()
-                .map(role -> role.getName())
+                .map(role -> role.getName())  // suppose que "getName" retourne le nom du rôle
                 .collect(Collectors.toList());
     }
 }

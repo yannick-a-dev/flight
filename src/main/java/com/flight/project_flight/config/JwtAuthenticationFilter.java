@@ -1,14 +1,16 @@
 package com.flight.project_flight.config;
 
+import com.flight.project_flight.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -17,56 +19,48 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
-    private final CustomUserDetailsService customUserDetailsService;
-    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider; // Service pour manipuler et valider les JWT
+    @Autowired
+    @Lazy
+    private UserService userService;
 
-    // Constructeur pour injecter JwtService, CustomUserDetailsService et AuthenticationManager
-    public JwtAuthenticationFilter(JwtService jwtService, CustomUserDetailsService customUserDetailsService, AuthenticationManager authenticationManager) {
-        this.jwtService = jwtService;
-        this.customUserDetailsService = customUserDetailsService;
-        this.authenticationManager = authenticationManager;
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+        // 1. Extraire le JWT de l'en-tête Authorization
+        String token = getJwtFromRequest(request);
 
-        String path = request.getServletPath();
-        System.out.println("Request Path: " + path);
+        // 2. Valider le JWT et extraire les informations de l'utilisateur
+        if (token != null && jwtTokenProvider.validateToken(token)) {
+            String username = jwtTokenProvider.getUsernameFromToken(token);
 
-        // Ignorer les chemins spécifiques
-        if (path.equals("/auth/login")) {
-            chain.doFilter(request, response);
-            return;
-        }
+            // 3. Authentifier l'utilisateur
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Créer un objet d'authentification avec les informations extraites du JWT
+                UserDetails userDetails = userService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities()
+                );
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("No JWT token found in Authorization header.");
-            chain.doFilter(request, response);
-            return;
-        }
-
-        String jwt = authHeader.substring(7);
-        String username = jwtService.extractUsername(jwt);
-        System.out.println("Extracted Username: " + username);
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-
-            if (jwtService.validateToken(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                System.out.println("Authentication set for user: " + username);
-            } else {
-                System.out.println("Invalid JWT token.");
+                // 4. Mettre l'authentification dans le contexte de sécurité
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
 
+        // Passer la requête à la chaîne de filtres suivante
         chain.doFilter(request, response);
     }
 
-
+    // Méthode pour extraire le token JWT de l'en-tête Authorization
+    private String getJwtFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7); // Retirer "Bearer " du début du token
+        }
+        return null;
+    }
 }

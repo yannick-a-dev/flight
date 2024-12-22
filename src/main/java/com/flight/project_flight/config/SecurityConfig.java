@@ -1,82 +1,79 @@
 package com.flight.project_flight.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfigurationSource;
+
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class); // Définir le logger
-
-    private final JwtService jwtService;
-    private final CustomUserDetailsService customUserDetailsService;
-    private final PasswordEncoder passwordEncoder;
-
-    // Injecter JwtService et CustomUserDetailsService
-    public SecurityConfig(JwtService jwtService, CustomUserDetailsService customUserDetailsService, PasswordEncoder passwordEncoder) {
-        this.jwtService = jwtService;
-        this.customUserDetailsService = customUserDetailsService;
-        this.passwordEncoder = passwordEncoder;
-        logger.info("SecurityConfig initialized with JwtService and CustomUserDetailsService");
+    @Autowired
+    @Lazy
+    private UserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Autowired
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-    // Créer un bean JwtAuthenticationFilter
+
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter(AuthenticationManager authenticationManager) {
-        logger.info("Creating JwtAuthenticationFilter bean");
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, customUserDetailsService, authenticationManager);
-        logger.info("JwtAuthenticationFilter bean created successfully");
-        return filter;
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
-    // Configurer la chaîne de sécurité
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        logger.info("Configuring HttpSecurity");
         http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login").permitAll()
-                        .anyRequest().authenticated()
+                // Configure authorization rules
+                .authorizeHttpRequests(authorizeRequests ->
+                        authorizeRequests
+                                .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()  // Allow POST requests to /auth/login without authentication
+                                .anyRequest().authenticated()  // Authenticate all other requests
                 )
-                .addFilterBefore(
-                        jwtAuthenticationFilter(http.getSharedObject(AuthenticationManager.class)),
-                        UsernamePasswordAuthenticationFilter.class
-                );
+                // CSRF configuration for stateless APIs
+                .csrf(csrf -> csrf
+                        .requireCsrfProtectionMatcher(request -> false)  // Disable CSRF protection for specific URLs or for the whole application
+                )
 
-        logger.info("HttpSecurity configured successfully");
+                // Add custom filter for JWT authentication
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
-    // Configurer l'AuthenticationManager
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        logger.info("Configuring AuthenticationManager");
-
-        // Configuration de l'AuthenticationManager
         AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.userDetailsService(customUserDetailsService).passwordEncoder(passwordEncoder);
+        authenticationManagerBuilder.userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder());
 
-        AuthenticationManager authenticationManager = authenticationManagerBuilder.build();
-        logger.info("AuthenticationManager configured successfully");
-
-        return authenticationManager;
+        return authenticationManagerBuilder.build();
     }
 
-    // Définir le UserDetailsService
     @Bean
-    public UserDetailsService userDetailsService() {
-        logger.info("Returning CustomUserDetailsService as UserDetailsService");
-        return customUserDetailsService;
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.addAllowedOrigin("*"); // Autoriser toutes les origines
+        corsConfig.addAllowedMethod("*"); // Autoriser toutes les méthodes HTTP (GET, POST, etc.)
+        corsConfig.addAllowedHeader("*"); // Autoriser tous les headers
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfig);
+        return source;
     }
 }
