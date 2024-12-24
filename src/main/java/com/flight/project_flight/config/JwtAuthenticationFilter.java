@@ -1,6 +1,6 @@
 package com.flight.project_flight.config;
 
-import com.flight.project_flight.service.UserService;
+import com.flight.project_flight.service.PassengerService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider; // Service pour manipuler et valider les JWT
     @Autowired
     @Lazy
-    private UserService userService;
+    private PassengerService passengerService;
 
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenProvider = jwtTokenProvider;
@@ -40,7 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 3. Authentifier l'utilisateur
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 // Créer un objet d'authentification avec les informations extraites du JWT
-                UserDetails userDetails = userService.loadUserByUsername(username);
+                UserDetails userDetails = passengerService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()
                 );

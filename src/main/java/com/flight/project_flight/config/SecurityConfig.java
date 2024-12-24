@@ -1,5 +1,6 @@
 package com.flight.project_flight.config;
 
+import com.flight.project_flight.models.PasswordHasher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,9 @@ public class SecurityConfig {
     @Lazy
     private UserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     @Autowired
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
@@ -32,17 +36,12 @@ public class SecurityConfig {
 
 
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // Configure authorization rules
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()  // Allow POST requests to /auth/login without authentication
+                                .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()  // Allow POST requests to /auth/login without authentication
                                 .anyRequest().authenticated()  // Authenticate all other requests
                 )
                 // CSRF configuration for stateless APIs
@@ -60,7 +59,7 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
         authenticationManagerBuilder.userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder());
+                .passwordEncoder(passwordEncoder);
 
         return authenticationManagerBuilder.build();
     }
@@ -76,4 +75,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", corsConfig);
         return source;
     }
+
 }

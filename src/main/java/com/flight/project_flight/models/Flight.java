@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
+@Table(name = "flight")
 public class Flight {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,11 +1,33 @@
 package com.flight.project_flight.dto;
 
-public class ErrorResponse {
-    private String error;
-    private String details;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    public ErrorResponse(String error, String details) {
+public class ErrorResponse {
+
+    private String error;
+    private String message;
+
+    @JsonCreator
+    public ErrorResponse(@JsonProperty("error") String error, @JsonProperty("message") String message) {
         this.error = error;
-        this.details = details;
+        this.message = message;
+    }
+
+    // Getters et setters
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

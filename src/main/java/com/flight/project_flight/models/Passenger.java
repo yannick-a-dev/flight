@@ -1,21 +1,35 @@
 package com.flight.project_flight.models;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
-public class Passenger {
+@Table(name = "passenger")
+public class Passenger implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String firstName;
-    private String lastName;
+    @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(nullable = false)
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
     private String phone;
+    @Column(nullable = false)
     private String passportNumber;
+
+    @Temporal(TemporalType.DATE)
     private Date dob;
 
     @OneToMany(mappedBy = "passenger")
@@ -23,6 +37,40 @@ public class Passenger {
 
     @OneToMany(mappedBy = "passenger")
     private List<Alert> alerts;
+
+    @Column(nullable = false)
+    private String password;
+
+    private boolean enabled;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private List<Role> roles;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
+    }
+
+
+    public Passenger(Long id, String firstName, String lastName, String email, String hashedPassword, String phone, String passportNumber, Date dob, Object reservations, Object alerts) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = hashedPassword; // Le mot de passe haché
+        this.phone = phone;
+        this.passportNumber = passportNumber;
+        this.dob = dob;
+        this.reservations = (List<Reservation>) reservations; // Conversion de l'objet en liste de réservations
+        this.alerts = (List<Alert>) alerts; // Conversion de l'objet en liste d'alertes
+    }
 
     public Long getId() {
         return id;
@@ -94,5 +142,49 @@ public class Passenger {
 
     public void setAlerts(List<Alert> alerts) {
         this.alerts = alerts;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return null;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
     }
 }

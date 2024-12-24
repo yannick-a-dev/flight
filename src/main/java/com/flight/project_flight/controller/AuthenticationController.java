@@ -1,12 +1,18 @@
 package com.flight.project_flight.controller;
 
 import com.flight.project_flight.dto.*;
+import com.flight.project_flight.models.MessageResponse;
+import com.flight.project_flight.models.PassengerRequest;
 import com.flight.project_flight.service.AuthService;
 import com.flight.project_flight.config.JwtService;
+import com.flight.project_flight.service.PassengerService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
@@ -18,13 +24,16 @@ import java.util.List;
 public class AuthenticationController {
 
     Logger logger = LoggerFactory.getLogger(getClass());
-
-    private final AuthService authService;
+    @Autowired
+    @Lazy
+    private AuthService authService;
     private final JwtService jwtService;
+    @Autowired
+    private PassengerService passengerService;
 
-    public AuthenticationController(AuthService authService, JwtService jwtService) {
-        this.authService = authService;
+    public AuthenticationController(JwtService jwtService, PassengerService passengerService) {
         this.jwtService = jwtService;
+        this.passengerService = passengerService;
     }
 
 
@@ -45,6 +54,37 @@ public class AuthenticationController {
                     .body(new TokenResponse("Internal server error", null, null)); // Generic message in production
         }
     }
+
+    @PostMapping(value = "/register", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> registerPassenger(@Valid @RequestBody PassengerRequest passengerRequest) {
+        logger.info("Received request to register a passenger with email: {}", passengerRequest.getEmail());
+
+        try {
+            // Appel du service pour enregistrer le passager
+            logger.info("Attempting to register passenger with email: {}", passengerRequest.getEmail());
+            passengerService.registerPassenger(passengerRequest);
+            logger.info("Passenger with email: {} successfully registered.", passengerRequest.getEmail());
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new MessageResponse("Passenger registered successfully"));
+        } catch (Exception e) {
+            logger.error("Error occurred while registering passenger with email: {}", passengerRequest.getEmail(), e);
+
+            // Gestion des erreurs spécifiques
+            if (e.getMessage().contains("Passenger with similar data already exists")) {
+                logger.warn("Conflict: Passenger with similar data already exists for email: {}", passengerRequest.getEmail());
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .contentType(MediaType.APPLICATION_JSON)  // Définir explicitement le type de contenu
+                        .body(new ErrorResponse("Conflict", "Passenger with similar data already exists"));
+            } else {
+                logger.error("Unexpected error during passenger registration for email: {}", passengerRequest.getEmail(), e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .contentType(MediaType.APPLICATION_JSON)  // Définir explicitement le type de contenu
+                        .body(new ErrorResponse("Internal server error", "Please try again later"));
+            }
+        }
+    }
+
 
 
     @PostMapping("/refresh")

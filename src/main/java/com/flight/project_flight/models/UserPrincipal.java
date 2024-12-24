@@ -13,7 +13,7 @@ public class UserPrincipal implements UserDetails {
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserPrincipal(UserEntity userEntity) {
+    public UserPrincipal(Passenger userEntity) {
         this.username = userEntity.getUsername();  // Username from UserEntity
         this.password = userEntity.getPassword();  // Password from UserEntity
         // Extracting roles and converting them to GrantedAuthority
