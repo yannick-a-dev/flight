@@ -21,7 +21,7 @@ public class PassengerController {
         this.passengerService = passengerService;
     }
 
-    @PostMapping
+    @PostMapping(consumes = "application/json")
     public ResponseEntity<Passenger> createPassenger(@RequestBody Passenger passenger) {
         if (passenger == null) {
             return ResponseEntity.badRequest().build();

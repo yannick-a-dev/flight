@@ -41,8 +41,9 @@ public class SecurityConfig {
                 // Configure authorization rules
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()  // Allow POST requests to /auth/login without authentication
-                                .anyRequest().authenticated()  // Authenticate all other requests
+                                .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+                                .requestMatchers( "/api/**").permitAll()
+                                .anyRequest().authenticated()
                 )
                 // CSRF configuration for stateless APIs
                 .csrf(csrf -> csrf
