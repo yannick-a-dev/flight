@@ -3,11 +3,9 @@ package com.flight.project_flight.controller;
 import com.flight.project_flight.models.Ticket;
 import com.flight.project_flight.service.TicketService;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController

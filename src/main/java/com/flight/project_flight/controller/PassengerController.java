@@ -1,6 +1,7 @@
 package com.flight.project_flight.controller;
 
 import com.flight.project_flight.models.Passenger;
+import com.flight.project_flight.models.PassengerRequest;
 import com.flight.project_flight.service.PassengerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,13 +23,13 @@ public class PassengerController {
     }
 
     @PostMapping(consumes = "application/json")
-    public ResponseEntity<Passenger> createPassenger(@RequestBody Passenger passenger) {
+    public ResponseEntity<Passenger> createPassenger(@RequestBody PassengerRequest passenger) {
         if (passenger == null) {
             return ResponseEntity.badRequest().build();
         }
 
         try {
-            Passenger savedPassenger = passengerService.savePassenger(passenger);
+            Passenger savedPassenger = passengerService.registerPassenger(passenger);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedPassenger);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
