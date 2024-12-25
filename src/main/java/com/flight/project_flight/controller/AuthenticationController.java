@@ -57,27 +57,16 @@ public class AuthenticationController {
 
     @PostMapping(value = "/register", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> registerPassenger(@Valid @RequestBody PassengerRequest passengerRequest) {
-        logger.info("Received request to register a passenger with email: {}", passengerRequest.getEmail());
-
         try {
-            // Appel du service pour enregistrer le passager
-            logger.info("Attempting to register passenger with email: {}", passengerRequest.getEmail());
             passengerService.registerPassenger(passengerRequest);
-            logger.info("Passenger with email: {} successfully registered.", passengerRequest.getEmail());
-
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new MessageResponse("Passenger registered successfully"));
         } catch (Exception e) {
-            logger.error("Error occurred while registering passenger with email: {}", passengerRequest.getEmail(), e);
-
-            // Gestion des erreurs spécifiques
             if (e.getMessage().contains("Passenger with similar data already exists")) {
-                logger.warn("Conflict: Passenger with similar data already exists for email: {}", passengerRequest.getEmail());
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .contentType(MediaType.APPLICATION_JSON)  // Définir explicitement le type de contenu
                         .body(new ErrorResponse("Conflict", "Passenger with similar data already exists"));
             } else {
-                logger.error("Unexpected error during passenger registration for email: {}", passengerRequest.getEmail(), e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .contentType(MediaType.APPLICATION_JSON)  // Définir explicitement le type de contenu
                         .body(new ErrorResponse("Internal server error", "Please try again later"));

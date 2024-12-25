@@ -9,6 +9,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +18,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
-
-    private final AuthenticationManager authenticationManager;
+    @Autowired
+    private AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     @Autowired
     private  PassengerService passengerService;
@@ -44,10 +45,10 @@ public class AuthService {
             );
 
             // Charger l'utilisateur depuis le UserService
-            User userEntity = passengerService.loadUserByUsername(username);
+            UserDetails userDetails = passengerService.loadUserByUsername(username);
 
             // Génération du token JWT avec les informations de l'utilisateur
-            return jwtTokenProvider.generateToken(userEntity);
+            return jwtTokenProvider.generateToken(userDetails);
 
         } catch (AuthenticationException e) {
             throw new RuntimeException("Authentication failed: " + e.getMessage());

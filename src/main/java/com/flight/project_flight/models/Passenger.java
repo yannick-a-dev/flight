@@ -58,7 +58,8 @@ public class Passenger implements UserDetails {
                 .collect(Collectors.toList());
     }
 
-
+    public Passenger() {
+    }
     public Passenger(Long id, String firstName, String lastName, String email, String hashedPassword, String phone, String passportNumber, Date dob, Object reservations, Object alerts) {
         this.id = id;
         this.firstName = firstName;

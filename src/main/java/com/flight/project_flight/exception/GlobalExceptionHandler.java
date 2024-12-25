@@ -23,10 +23,17 @@ public class GlobalExceptionHandler {
                 .body(new TokenResponse("User not found: " + e.getMessage(), null, null));
     }
 
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<String> handleEmailAlreadyExistsException(EmailAlreadyExistsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT) // Code 409
+                .body(ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<TokenResponse> handleGenericException(Exception e) {
+    public ResponseEntity<Object> handleGenericException(Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new TokenResponse("Internal server error: " + e.getMessage(), null, null));
+                .body("An unexpected error occurred: " + e.getMessage());
     }
 }
 

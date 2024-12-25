@@ -8,9 +8,11 @@ import com.flight.project_flight.repository.PassengerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,14 +28,14 @@ import java.util.stream.Collectors;
 public class PassengerService implements UserDetailsService {
     @Autowired
     private  PassengerRepository passengerRepository;
-    @Autowired
-    private  AuthService authService;
+    private final AuthService authService;
 
     private final PasswordEncoder passwordEncoder;
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
-    public PassengerService(PasswordEncoder passwordEncoder) {
+    public PassengerService(@Lazy AuthService authService, PasswordEncoder passwordEncoder) {
+        this.authService = authService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -104,15 +106,15 @@ public class PassengerService implements UserDetailsService {
         logger.info("Passenger saved successfully: {}", savedPassenger);
         return savedPassenger;
     }
-    public User loadUserByUsername(String email) {
-        // Charger l'utilisateur de la base de données par son email
+    @Override
+    public UserDetails loadUserByUsername(String email) {
         Passenger userEntity = passengerRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        // Retourner un objet User (implémentation de UserDetails)
-        return new User(userEntity.getEmail(), userEntity.getPassword(), userEntity.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName())) // Vous devez transformer les rôles en GrantedAuthority
-                .collect(Collectors.toList()));
+        return new User(userEntity.getEmail(), userEntity.getPassword(),
+                userEntity.getRoles().stream()
+                        .map(role -> new SimpleGrantedAuthority(role.getName()))
+                        .collect(Collectors.toList()));
     }
 
 }
