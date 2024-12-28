@@ -1,13 +1,17 @@
 package com.flight.project_flight.controller;
 
+import com.flight.project_flight.dto.FlightDto;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.service.FlightService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/flights")
@@ -19,12 +23,21 @@ public class FlightController {
     }
 
     @PostMapping
-    public ResponseEntity<Flight> createFlight(@RequestBody Flight flight) {
-        Flight createdFlight = flightService.createFlight(flight);
+    public ResponseEntity<?> createFlight(@RequestBody @Valid FlightDto flightDto, BindingResult bindingResult) {
+        // Vérifier les erreurs de validation dans le DTO
+        if (bindingResult.hasErrors()) {
+            // Renvoyer les erreurs de validation sous forme de List<String>
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .collect(Collectors.toList());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors); // Réponse d'erreur
+        }
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(createdFlight);
+        // Appeler le service pour créer le vol
+        Flight createdFlight = flightService.createFlight(flightDto);
+
+        // Renvoyer une réponse avec l'objet Flight créé
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdFlight); // Réponse de succès
     }
 
     @GetMapping

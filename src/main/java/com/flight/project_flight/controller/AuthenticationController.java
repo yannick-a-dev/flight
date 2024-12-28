@@ -103,5 +103,4 @@ public class AuthenticationController {
                     .body(new ErrorResponse("Internal server error", "Please try again later"));
         }
     }
-
 }

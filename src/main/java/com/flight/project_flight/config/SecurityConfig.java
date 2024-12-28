@@ -34,20 +34,19 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // Configure authorization rules
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+                                .requestMatchers( "/auth/**").permitAll()
                                 .requestMatchers( "/api/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 // CSRF configuration for stateless APIs
                 .csrf(csrf -> csrf
-                        .requireCsrfProtectionMatcher(request -> false)  // Disable CSRF protection for specific URLs or for the whole application
+                        .requireCsrfProtectionMatcher(request -> false)
                 )
 
                 // Add custom filter for JWT authentication
@@ -64,17 +63,4 @@ public class SecurityConfig {
 
         return authenticationManagerBuilder.build();
     }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.addAllowedOrigin("*"); // Autoriser toutes les origines
-        corsConfig.addAllowedMethod("*"); // Autoriser toutes les méthodes HTTP (GET, POST, etc.)
-        corsConfig.addAllowedHeader("*"); // Autoriser tous les headers
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfig);
-        return source;
-    }
-
 }

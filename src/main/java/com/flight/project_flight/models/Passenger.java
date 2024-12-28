@@ -38,6 +38,7 @@ public class Passenger implements UserDetails {
     private List<Reservation> reservations;
 
     @OneToMany(mappedBy = "passenger")
+    @JsonBackReference
     private List<Alert> alerts;
 
     @Column(nullable = false)

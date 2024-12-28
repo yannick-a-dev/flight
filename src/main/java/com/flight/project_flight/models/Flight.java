@@ -1,5 +1,6 @@
 package com.flight.project_flight.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -23,6 +24,7 @@ public class Flight {
     private List<Reservation> reservations;
 
     @OneToMany(mappedBy = "flight")
+    @JsonBackReference
     private List<Alert> alerts;
 
     public Long getId() {

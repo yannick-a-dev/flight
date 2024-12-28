@@ -1,27 +1,15 @@
-package com.flight.project_flight.models;
-
-import jakarta.persistence.*;
+package com.flight.project_flight.dto;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-@Entity
-@Table(name = "reservation")
-public class Reservation {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ReservationDto {
     private Long id;
     private Date reservationDate;
     private String seatNumber;
     private BigDecimal price;
-
-    @ManyToOne
-    @JoinColumn(name = "passenger_id")
-    private Passenger passenger;
-
-    @ManyToOne
-    @JoinColumn(name = "flight_id")
-    private Flight flight;
+    private Long passengerId;
+    private Long flightId;
 
     public Long getId() {
         return id;
@@ -31,8 +19,8 @@ public class Reservation {
         this.id = id;
     }
 
-    public Date getReservationDate(Date reservationDate) {
-        return this.reservationDate;
+    public Date getReservationDate() {
+        return reservationDate;
     }
 
     public void setReservationDate(Date reservationDate) {
@@ -55,19 +43,19 @@ public class Reservation {
         this.price = price;
     }
 
-    public Passenger getPassenger() {
-        return passenger;
+    public Long getPassengerId() {
+        return passengerId;
     }
 
-    public void setPassenger(Passenger passenger) {
-        this.passenger = passenger;
+    public void setPassengerId(Long passengerId) {
+        this.passengerId = passengerId;
     }
 
-    public Flight getFlight() {
-        return flight;
+    public Long getFlightId() {
+        return flightId;
     }
 
-    public void setFlight(Flight flight) {
-        this.flight = flight;
+    public void setFlightId(Long flightId) {
+        this.flightId = flightId;
     }
 }

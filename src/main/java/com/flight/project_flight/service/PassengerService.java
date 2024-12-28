@@ -117,4 +117,7 @@ public class PassengerService implements UserDetailsService {
                         .collect(Collectors.toList()));
     }
 
+    public Passenger findById(Long id) {
+        return passengerRepository.findById(id).orElseThrow(() -> new RuntimeException("Passenger not found"));
+    }
 }
