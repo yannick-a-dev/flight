@@ -53,4 +53,8 @@ public class AlertService {
     public List<Alert> getAllAlerts() {
         return alertRepository.findAll();
     }
+
+    public Alert saveAlert(Alert alert) {
+        return alertRepository.save(alert);
+    }
 }

@@ -1,5 +1,6 @@
 package com.flight.project_flight.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.flight.project_flight.enums.Severity;
 import jakarta.persistence.*;
@@ -19,7 +20,7 @@ public class Alert {
 
     @ManyToOne
     @JoinColumn(name = "passenger_id")
-    @JsonManagedReference
+    @JsonBackReference
     private Passenger passenger;
 
     @ManyToOne

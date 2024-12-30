@@ -1,7 +1,9 @@
 package com.flight.project_flight.controller;
 
-import com.flight.project_flight.models.Passenger;
-import com.flight.project_flight.models.PassengerRequest;
+import com.flight.project_flight.dto.PassengerDTO;
+import com.flight.project_flight.models.*;
+import com.flight.project_flight.service.AlertConverter;
+import com.flight.project_flight.service.AlertService;
 import com.flight.project_flight.service.PassengerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -9,17 +11,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RequestMapping("/api/passengers")
 @RestController
 public class PassengerController {
 
     private final PassengerService passengerService;
+    private final AlertService alertService;
+    private final AlertConverter alertConverter;
 
-    public PassengerController(PassengerService passengerService) {
+    public PassengerController(PassengerService passengerService, AlertService alertService, AlertConverter alertConverter) {
         this.passengerService = passengerService;
+        this.alertService = alertService;
+        this.alertConverter = alertConverter;
     }
 
     @PostMapping(consumes = "application/json")
@@ -49,25 +57,45 @@ public class PassengerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<Passenger>> getPassengerById(@PathVariable Long id) {
-        Optional<Passenger> passenger = passengerService.getPassengerById(id);
-        return ResponseEntity.ok(passenger);
+    public ResponseEntity<Passenger> getPassengerById(@PathVariable Long id) {
+        return passengerService.getPassengerById(id)
+                .map(passenger -> ResponseEntity.ok(passenger))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+
     @PutMapping("/{id}")
-    public ResponseEntity<Passenger> updatePassenger(@PathVariable Long id, @RequestBody Passenger passenger) {
+    public ResponseEntity<Passenger> updatePassenger(@PathVariable Long id, @RequestBody PassengerDTO passengerDTO) {
         return passengerService.getPassengerById(id)
                 .map(existingPassenger -> {
-                    // Mettre à jour les propriétés du passager existant avec celles du corps de la requête
-                    existingPassenger.setFirstName(passenger.getFirstName());
-                    existingPassenger.setLastName(passenger.getLastName());
-                    existingPassenger.setEmail(passenger.getEmail());
-                    existingPassenger.setPhone(passenger.getPhone());
-                    existingPassenger.setPassportNumber(passenger.getPassportNumber());
-                    existingPassenger.setDob(passenger.getDob());
-                    existingPassenger.setReservations(passenger.getReservations());
-                    existingPassenger.setAlerts(passenger.getAlerts());
+                    // Mettre à jour les propriétés du passager
+                    existingPassenger.setFirstName(passengerDTO.getFirstName());
+                    existingPassenger.setLastName(passengerDTO.getLastName());
+                    existingPassenger.setEmail(passengerDTO.getEmail());
+                    existingPassenger.setPhone(passengerDTO.getPhone());
+                    existingPassenger.setPassportNumber(passengerDTO.getPassportNumber());
+                    existingPassenger.setDob(passengerDTO.getDob());
 
+                    // Mettre à jour les alertes - Avoid NullPointerException by checking null
+                    List<Alert> updatedAlerts = Optional.ofNullable(passengerDTO.getAlerts())
+                            .orElse(Collections.emptyList()) // If null, initialize with empty list
+                            .stream()
+                            .map(alertDto -> {
+                                // Get the first Flight associated with the Passenger via Reservations
+                                Flight flight = existingPassenger.getReservations().stream()
+                                        .map(Reservation::getFlight)
+                                        .findFirst()  // Assuming one flight per passenger
+                                        .orElseThrow(() -> new RuntimeException("No flight associated with passenger"));
+
+                                // Convert DTO to entity and save the alert
+                                Alert alert = alertConverter.convertToEntity(alertDto, existingPassenger, flight);
+                                return alertService.saveAlert(alert);
+                            })
+                            .collect(Collectors.toList());
+
+                    existingPassenger.setAlerts(updatedAlerts);
+
+                    // Sauvegarder le passager mis à jour
                     Passenger updatedPassenger = passengerService.savePassenger(existingPassenger);
                     return ResponseEntity.ok(updatedPassenger);
                 })
