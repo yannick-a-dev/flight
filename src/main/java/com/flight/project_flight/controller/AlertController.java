@@ -76,4 +76,14 @@ public class AlertController {
         }
         return ResponseEntity.ok(alerts); // Retourne toutes les alertes
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Alert> getAlertById(@PathVariable Long id) {
+        Alert alert = alertService.getAlertById(id);
+        if (alert == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Retourne 404 si l'alerte n'existe pas
+        }
+        return ResponseEntity.ok(alert); // Retourne l'alerte avec un statut 200
+    }
+
 }

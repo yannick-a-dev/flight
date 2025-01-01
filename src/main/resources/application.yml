@@ -1,8 +1,10 @@
 server:
   port: 8081
+
 spring:
   application:
-    name: flight-management
+    name: flight-management-service # Nom de l'application
+
   datasource:
     url: jdbc:mysql://localhost:3306/flights?useUnicode=true&characterEncoding=UTF-8
     username: user
@@ -10,6 +12,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       pool-name: HikariCP
+
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
@@ -18,17 +21,34 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: localhost:9092 # Adresse du broker Kafka
     consumer:
-      group-id: flight-group
-      auto-offset-reset: earliest
-      enable-auto-commit: false
+      group-id: flight-service-group # Identifiant du groupe de consommateurs
+      auto-offset-reset: earliest # Reprend les messages dès le début si aucun offset n'existe
+      enable-auto-commit: false # Empêche l'engagement automatique pour un contrôle manuel
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    topic:
+      flight-events: flights-topic # Nom du topic pour les événements Kafka
+
+  kafka.template:
+    default-topic: event-placed
+  kafka.producer:
+    retries: 3 # Réessayer 3 fois en cas d'échec de l'envoi
+    keyserializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
 jwt:
   secret: "kC7g8VvePaKZ6FSrkL0O3pNEakjWwRRU8GJ0aM1cyYwpWs22cD/sGfVrmF84l9ptIPlv6Fh7xn2OxAQgZ9yH/JhKLmpeXhWwXyXhUq6uW/k="
   accessToken:
@@ -36,13 +56,24 @@ jwt:
   refreshToken:
     expiration: 604800000
 
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
 cors:
   allowed-origins: http://localhost:4200
-  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-  allowed-headers: Authorization,Content-Type
+  allowed-methods: GET, POST, PUT, DELETE, OPTIONS
+  allowed-headers: Authorization, Content-Type
+
+logging:
+  level:
+    root: INFO
+    org.springframework.kafka: DEBUG # Niveau de log pour Kafka
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*" # Expose tous les endpoints pour l'administration
+  endpoint:
+    health:
+      show-details: always # Affiche les détails sur les points de santé
+
+
 
