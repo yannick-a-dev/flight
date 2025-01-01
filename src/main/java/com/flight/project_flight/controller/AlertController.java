@@ -11,6 +11,8 @@ import com.flight.project_flight.service.PassengerService;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +24,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/alerts")
 public class AlertController {
+
+    private static final Logger log = LoggerFactory.getLogger(AlertService.class);
 
     private final AlertService alertService;
     private final PassengerService passengerService;
@@ -36,16 +40,19 @@ public class AlertController {
     @PostMapping
     public ResponseEntity<Alert> createAlert(@RequestBody AlertDto alertDto) {
         if (alertDto.getPassengerId() == null || alertDto.getFlightId() == null) {
+            log.error("PassengerId or FlightId is missing in the request body.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
         Passenger passenger = passengerService.findById(alertDto.getPassengerId());
         if (passenger == null) {
+            log.error("Passenger not found with ID: " + alertDto.getPassengerId());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         Flight flight = flightService.findById(alertDto.getFlightId());
         if (flight == null) {
+            log.error("Flight not found with ID: " + alertDto.getFlightId());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
@@ -58,17 +65,15 @@ public class AlertController {
                 alertDto.getSeverity()
         );
 
-        // Retourne l'alerte créée ou existante avec un statut 201
+        if (alert == null) {
+            log.error("Failed to create alert for Passenger ID: " + alertDto.getPassengerId() + " and Flight ID: " + alertDto.getFlightId());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(alert);
     }
 
-
-    @GetMapping("/{passengerId}")
-    public ResponseEntity<List<Alert>> getAlertsForPassenger(@PathVariable Long passengerId) {
-        return ResponseEntity.ok(alertService.getAlertsForPassenger(passengerId));
-    }
-
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<Alert>> getAllAlerts() {
         List<Alert> alerts = alertService.getAllAlerts();
         if (alerts.isEmpty()) {
@@ -77,13 +82,22 @@ public class AlertController {
         return ResponseEntity.ok(alerts); // Retourne toutes les alertes
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Alert> getAlertById(@PathVariable Long id) {
-        Alert alert = alertService.getAlertById(id);
-        if (alert == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Retourne 404 si l'alerte n'existe pas
+    // Récupérer une alerte par son ID
+    @GetMapping
+    public ResponseEntity<?> getAlerts(
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) Long passengerId) {
+        if (id != null) {
+            Alert alert = alertService.getAlertById(id);
+            if (alert == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+            return ResponseEntity.ok(alert);
         }
-        return ResponseEntity.ok(alert); // Retourne l'alerte avec un statut 200
+        if (passengerId != null) {
+            return ResponseEntity.ok(alertService.getAlertsForPassenger(passengerId));
+        }
+        return ResponseEntity.badRequest().body("Please provide either 'id' or 'passengerId'");
     }
 
 }
