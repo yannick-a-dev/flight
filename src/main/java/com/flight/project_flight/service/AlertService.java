@@ -1,5 +1,6 @@
 package com.flight.project_flight.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flight.project_flight.enums.Severity;
 import com.flight.project_flight.event.AlertEvent;
 import com.flight.project_flight.models.Alert;
@@ -23,13 +24,15 @@ import java.util.List;
 public class AlertService {
 
     private static final Logger log = LoggerFactory.getLogger(AlertService.class);
-    private final KafkaTemplate<String, AlertEvent> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
     private final AlertRepository alertRepository;
 
     private final PassengerRepository passengerRepository;
 
-    public AlertService(KafkaTemplate kafkaTemplate, AlertRepository alertRepository, PassengerRepository passengerRepository) {
+    public AlertService(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper, AlertRepository alertRepository, PassengerRepository passengerRepository) {
         this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
         this.alertRepository = alertRepository;
         this.passengerRepository = passengerRepository;
     }
@@ -65,12 +68,16 @@ public class AlertService {
         alert.setSeverity(severityEnum);
         alert.setAlertDate(alertDate);
 
-        // Send the message to Kafka topic
-        AlertEvent alertEvent = new AlertEvent(alert.getPassenger().getEmail());
+        // Create an AlertEvent
+        AlertEvent alertEvent = new AlertEvent( alert.getPassenger().getPassportNumber(),alert.getPassenger().getEmail());
+
         try {
-            log.info("Start - Sending AlertEvent {} to Kafka topic event-placed", alertEvent);
-            kafkaTemplate.send("event-placed", alertEvent).get();
-            log.info("End - Successfully sent AlertEvent {} to Kafka topic event-placed", alertEvent);
+            // Convert AlertEvent to JSON string
+            String alertEventJson = objectMapper.writeValueAsString(alertEvent);
+
+            log.info("Start - Sending AlertEvent {} to Kafka topic event-placed", alertEventJson);
+            kafkaTemplate.send("event-placed", alertEventJson).get(); // Send JSON string to Kafka
+            log.info("End - Successfully sent AlertEvent {} to Kafka topic event-placed", alertEventJson);
         } catch (Exception e) {
             log.error("Failed to send AlertEvent to Kafka topic event-placed", e);
             throw new RuntimeException("Failed to send AlertEvent to Kafka", e);

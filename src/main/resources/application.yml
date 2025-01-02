@@ -22,26 +22,27 @@ spring:
       hibernate:
         format_sql: true
 
-  kafka:
-    bootstrap-servers: localhost:9092 # Adresse du broker Kafka
-    consumer:
-      group-id: flight-service-group # Identifiant du groupe de consommateurs
-      auto-offset-reset: earliest # Reprend les messages dès le début si aucun offset n'existe
-      enable-auto-commit: false # Empêche l'engagement automatique pour un contrôle manuel
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    topic:
-      flight-events: flights-topic # Nom du topic pour les événements Kafka
-
-  kafka.template:
-    default-topic: event-placed
-  kafka.producer:
-    retries: 3 # Réessayer 3 fois en cas d'échec de l'envoi
-    keyserializer: org.apache.kafka.common.serialization.StringSerializer
+kafka:
+  bootstrap-servers: localhost:9092
+  consumer:
+    group-id: flight-service-group
+    auto-offset-reset: earliest
+    enable-auto-commit: false
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+  producer:
+    client-id: flight-management-service-producer
+    retries: 5
+    acks: all
+    retry-backoff-ms: 100
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
     value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  template:
+    default-topic: flights-topic
+  topic:
+    flight-events: flights-topic
+
+
 
 springdoc:
   api-docs:
