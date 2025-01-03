@@ -22,7 +22,9 @@ public class FlightController {
         this.flightService = flightService;
     }
 
-    @PostMapping
+
+
+    @GetMapping   @PostMapping
     public ResponseEntity<?> createFlight(@RequestBody @Valid FlightDto flightDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             List<String> errors = bindingResult.getFieldErrors().stream()
@@ -33,8 +35,6 @@ public class FlightController {
         Flight createdFlight = flightService.createFlight(flightDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdFlight);
     }
-
-    @GetMapping
     public ResponseEntity<List<Flight>> getAllFlights() {
         List<Flight> flights = flightService.getAllFlights();
 
