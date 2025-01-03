@@ -61,7 +61,6 @@ public class Passenger implements UserDetails {
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
     }
-
     public Passenger() {
     }
     public Passenger(Long id, String firstName, String lastName, String email, String hashedPassword, String phone, String passportNumber, Date dob, Object reservations, Object alerts) {

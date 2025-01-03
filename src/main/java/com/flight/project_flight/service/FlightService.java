@@ -115,4 +115,7 @@ public class FlightService {
                 .orElseThrow(() -> new RuntimeException("Flight not found with id " + id));
         flightRepository.delete(flight);
     }
+    public List<Flight> getFlightsByPassenger(Long passengerId) {
+        return flightRepository.findFlightsByPassengerId(passengerId);
+    }
 }

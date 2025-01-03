@@ -4,6 +4,7 @@ import com.flight.project_flight.models.Ticket;
 import com.flight.project_flight.service.TicketService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -18,8 +19,13 @@ public class TicketController {
         this.ticketService = ticketService;
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Ticket> createTicket(@RequestBody Ticket ticket) {
+        // Vérification des relations
+        if (ticket.getPassenger() == null || ticket.getFlight() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         Ticket createdTicket = ticketService.createTicket(ticket);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTicket);
     }

@@ -20,13 +20,18 @@ public class Alert {
 
     @ManyToOne
     @JoinColumn(name = "passenger_id")
-    @JsonBackReference
+    @JsonBackReference("alert-passenger")
     private Passenger passenger;
 
     @ManyToOne
     @JoinColumn(name = "flight_id")
-    @JsonManagedReference
+    @JsonBackReference("alert-flight")
     private Flight flight;
+
+    @ManyToOne
+    @JoinColumn(name = "ticket_id")
+    @JsonBackReference("ticket-alerts")
+    private Ticket ticket;
 
     public Long getId() {
         return id;
@@ -74,5 +79,13 @@ public class Alert {
 
     public void setFlight(Flight flight) {
         this.flight = flight;
+    }
+
+    public Ticket getTicket() {
+        return ticket;
+    }
+
+    public void setTicket(Ticket ticket) {
+        this.ticket = ticket;
     }
 }

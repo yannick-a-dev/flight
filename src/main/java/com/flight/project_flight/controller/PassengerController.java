@@ -4,6 +4,7 @@ import com.flight.project_flight.dto.PassengerDTO;
 import com.flight.project_flight.models.*;
 import com.flight.project_flight.service.AlertConverter;
 import com.flight.project_flight.service.AlertService;
+import com.flight.project_flight.service.FlightService;
 import com.flight.project_flight.service.PassengerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,11 +22,13 @@ import java.util.stream.Collectors;
 public class PassengerController {
 
     private final PassengerService passengerService;
+    private final FlightService flightService;
     private final AlertService alertService;
     private final AlertConverter alertConverter;
 
-    public PassengerController(PassengerService passengerService, AlertService alertService, AlertConverter alertConverter) {
+    public PassengerController(PassengerService passengerService, FlightService flightService, AlertService alertService, AlertConverter alertConverter) {
         this.passengerService = passengerService;
+        this.flightService = flightService;
         this.alertService = alertService;
         this.alertConverter = alertConverter;
     }
@@ -60,10 +63,11 @@ public class PassengerController {
     public ResponseEntity<Passenger> getPassengerById(@PathVariable Long id) {
         return passengerService.getPassengerById(id)
                 .map(passenger -> ResponseEntity.ok(passenger))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseGet(() -> {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(null);
+                });
     }
-
-
     @PutMapping("/{id}")
     public ResponseEntity<Passenger> updatePassenger(@PathVariable Long id, @RequestBody PassengerDTO passengerDTO) {
         return passengerService.getPassengerById(id)
@@ -111,6 +115,12 @@ public class PassengerController {
         } else {
             return ResponseEntity.notFound().build(); // Code 404 : Le passager n'a pas été trouvé
         }
+    }
+
+    @GetMapping("/{passengerId}/flights")
+    public ResponseEntity<List<Flight>> getFlightsByPassenger(@PathVariable Long passengerId) {
+        List<Flight> flights = flightService.getFlightsByPassenger(passengerId);
+        return ResponseEntity.ok(flights);
     }
 
 }
