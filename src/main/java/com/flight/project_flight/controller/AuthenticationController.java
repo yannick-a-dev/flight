@@ -38,19 +38,30 @@ public class AuthenticationController {
 
     @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
+        logger.debug("Login request received: {}", request);
+
         try {
+            // Authentification et génération des tokens
+            logger.debug("Authenticating user: {}", request.getUsername());
             String accessToken = authService.authenticateAndGenerateToken(request.getUsername(), request.getPassword());
+
+            logger.debug("Generating refresh token for user: {}", request.getUsername());
             String refreshToken = jwtService.generateRefreshToken(request.getUsername());
-            String expiresIn = String.valueOf(jwtService.getAccessTokenExpiry()); // Méthode pour récupérer la durée de validité
+
+            logger.debug("Fetching access token expiry for user: {}", request.getUsername());
+            String expiresIn = String.valueOf(jwtService.getAccessTokenExpiry());
+
+            logger.info("Authentication successful for user: {}", request.getUsername());
             return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken, expiresIn));
+
         } catch (BadCredentialsException e) {
-            logger.error("Authentication failed for user {}: {}", request.getUsername(), e.getMessage());
+            logger.warn("Authentication failed for user {}: {}", request.getUsername(), e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new TokenResponse("Authentication failed", null, null)); // Generic message in production
+                    .body(new TokenResponse("Authentication failed", null, null));
         } catch (Exception e) {
-            logger.error("Internal server error: {}", e.getMessage());
+            logger.error("Unexpected error during login for user {}: {}", request.getUsername(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new TokenResponse("Internal server error", null, null)); // Generic message in production
+                    .body(new TokenResponse("Internal server error", null, null));
         }
     }
 

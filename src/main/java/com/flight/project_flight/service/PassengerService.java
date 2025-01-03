@@ -45,10 +45,11 @@ public class PassengerService implements UserDetailsService {
 
     public List<Passenger> getAllPassengers() {
         return passengerRepository.findAll().stream()
-                .filter(passenger -> passenger.getEmail() != null && !passenger.getEmail().isEmpty())
-                .sorted(Comparator.comparing(Passenger::getLastName))
+                .filter(passenger -> passenger.getEmail() != null && !passenger.getEmail().isEmpty())  // Filtrage des passagers avec un email non vide
+                .sorted(Comparator.comparing(Passenger::getId))  // Trie uniquement par ID de manière croissante
                 .collect(Collectors.toList());
     }
+
 
     public List<String> getPassengerNames() {
         return passengerRepository.findAll().stream()

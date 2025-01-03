@@ -5,11 +5,13 @@ import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.repository.PassengerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
@@ -47,14 +49,21 @@ public class AuthService {
             // Charger l'utilisateur depuis le UserService
             UserDetails userDetails = passengerService.loadUserByUsername(username);
 
+            if (userDetails == null) {
+                throw new UsernameNotFoundException("User not found: " + username);
+            }
+
             // Génération du token JWT avec les informations de l'utilisateur
             return jwtTokenProvider.generateToken(userDetails);
 
+        } catch (BadCredentialsException e) {
+            throw new AuthenticationException("Invalid username or password") {};
+        } catch (UsernameNotFoundException e) {
+            throw new AuthenticationException("User not found: " + e.getMessage()) {};
         } catch (AuthenticationException e) {
-            throw new RuntimeException("Authentication failed: " + e.getMessage());
+            throw new AuthenticationException("Authentication failed: " + e.getMessage()) {};
         }
     }
-
     public String getCurrentUsername() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }

@@ -9,9 +9,9 @@ public class TokenResponse {
     public TokenResponse(String accessToken, String refreshToken, String expiresIn) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
+        this.expiresIn = Long.parseLong(expiresIn);
     }
 
-    // Getter et Setter pour accessToken
     public String getAccessToken() {
         return accessToken;
     }
@@ -20,7 +20,6 @@ public class TokenResponse {
         this.accessToken = accessToken;
     }
 
-    // Getter et Setter pour refreshToken
     public String getRefreshToken() {
         return refreshToken;
     }
