@@ -86,19 +86,7 @@ public class AlertService {
         return alertRepository.save(alert);
     }
 
-    public List<Alert> getAlertsForPassenger(Long passengerId) {
-        return alertRepository.findByPassengerId(passengerId);
-    }
-
-    public List<Alert> getAllAlerts() {
-        return alertRepository.findAll();
-    }
-
     public Alert saveAlert(Alert alert) {
         return alertRepository.save(alert);
-    }
-
-    public Alert getAlertById(Long id) {
-        return alertRepository.findById(id).orElse(null);
     }
 }

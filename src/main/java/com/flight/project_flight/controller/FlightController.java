@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/flights")
 public class FlightController {
+
     private final FlightService flightService;
 
     public FlightController(FlightService flightService) {
@@ -64,3 +65,4 @@ public class FlightController {
         }
     }
 }
+

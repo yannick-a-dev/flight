@@ -1,16 +1,10 @@
 package com.flight.project_flight.service;
 
-import com.flight.project_flight.dto.AlertDto;
 import com.flight.project_flight.dto.FlightDto;
-import com.flight.project_flight.dto.ReservationDto;
-import com.flight.project_flight.enums.Severity;
-import com.flight.project_flight.models.Alert;
+import com.flight.project_flight.mapper.AlertMapper;
+import com.flight.project_flight.mapper.ReservationMapper;
 import com.flight.project_flight.models.Flight;
-import com.flight.project_flight.models.Passenger;
-import com.flight.project_flight.models.Reservation;
 import com.flight.project_flight.repository.FlightRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,20 +14,23 @@ import java.util.stream.Collectors;
 @Service
 public class FlightService {
     private final FlightRepository flightRepository;
-    private static final PassengerService passengerService = null;
-    private static final FlightService flightService = null;
-    public FlightService(FlightRepository flightRepository) {
+    private final AlertMapper alertMapper;
+    private final ReservationMapper reservationMapper;
+    private final PassengerService passengerService;
+
+    public FlightService(FlightRepository flightRepository, AlertMapper alertMapper, ReservationMapper reservationMapper, PassengerService passengerService) {
         this.flightRepository = flightRepository;
+        this.alertMapper = alertMapper;
+        this.reservationMapper = reservationMapper;
+        this.passengerService = passengerService;
     }
 
+
     public Flight createFlight(FlightDto flightDto) {
-        // Validation (exemple de vérifier si un vol avec le même numéro existe déjà)
-        Optional<Flight> existingFlight = flightRepository.findByFlightNumber(flightDto.getFlightNumber());
-        if (existingFlight.isPresent()) {
+        if (flightRepository.findByFlightNumber(flightDto.getFlightNumber()).isPresent()) {
             throw new IllegalArgumentException("Flight with this flight number already exists.");
         }
 
-        // Mapper le DTO à l'entité Flight
         Flight flight = new Flight();
         flight.setFlightNumber(flightDto.getFlightNumber());
         flight.setDepartureTime(flightDto.getDepartureTime());
@@ -41,46 +38,14 @@ public class FlightService {
         flight.setDepartureAirport(flightDto.getDepartureAirport());
         flight.setArrivalAirport(flightDto.getArrivalAirport());
         flight.setStatus(flightDto.getStatus());
-        // Convertir les réservations
-        List<Reservation> reservations = flightDto.getReservations().stream()
-                .map(reservationDto -> toEntity(reservationDto)) // Convertir chaque ReservationDto en Reservation
-                .collect(Collectors.toList());
-        flight.setReservations(reservations);
+        flight.setReservations(flightDto.getReservations().stream()
+                .map(reservationMapper::toEntity)
+                .collect(Collectors.toList()));
+        flight.setAlerts(flightDto.getAlerts().stream()
+                .map(alertMapper::toEntity)
+                .collect(Collectors.toList()));
 
-        // Convertir les alertes
-        List<Alert> alerts = flightDto.getAlerts().stream()
-                .map(alertDto -> toEntity(alertDto)) // Convertir chaque AlertDto en Alert
-                .collect(Collectors.toList());
-        flight.setAlerts(alerts);
-
-        // Sauvegarder le vol dans la base de données
         return flightRepository.save(flight);
-    }
-
-    private static Reservation toEntity(ReservationDto reservationDto) {
-        Reservation reservation = new Reservation();
-        reservation.getReservationDate(reservationDto.getReservationDate());
-        reservation.setSeatNumber(reservationDto.getSeatNumber());
-        reservation.setPrice(reservationDto.getPrice());
-        Passenger passenger = passengerService.findById(reservationDto.getPassengerId());
-        reservation.setPassenger(passenger);
-        Flight flight = flightService.findById(reservationDto.getFlightId());
-        reservation.setFlight(flight);
-        return reservation;
-    }
-
-    private static Alert toEntity(AlertDto alertDto) {
-        Alert alert = new Alert();
-        alert.setMessage(alertDto.getMessage());
-        alert.setAlertDate(alertDto.getAlertDate());
-        Severity severity = Severity.valueOf(alertDto.getSeverity().toUpperCase());  // Utilise `toUpperCase()` pour éviter les problèmes de casse
-        alert.setSeverity(severity);
-        Passenger passenger = passengerService.findById(alertDto.getPassengerId());
-        alert.setPassenger(passenger);
-        Flight flight = flightService.findById(alertDto.getFlightId());
-        alert.setFlight(flight);
-        // Assurez-vous d'assigner le vol à partir du DTO si nécessaire
-        return alert;
     }
 
     public Flight findById(Long id) {

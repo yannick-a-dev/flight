@@ -6,6 +6,7 @@ import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.service.AlertService;
+import com.flight.project_flight.service.FlightAlertService;
 import com.flight.project_flight.service.FlightService;
 import com.flight.project_flight.service.PassengerService;
 import lombok.AllArgsConstructor;
@@ -24,15 +25,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/alerts")
 public class AlertController {
+    private static final Logger log = LoggerFactory.getLogger(AlertController.class);
 
-    private static final Logger log = LoggerFactory.getLogger(AlertService.class);
-
-    private final AlertService alertService;
+    private final FlightAlertService flightAlertService;
     private final PassengerService passengerService;
     private final FlightService flightService;
 
-    public AlertController(AlertService alertService, PassengerService passengerService, FlightService flightService) {
-        this.alertService = alertService;
+    public AlertController(FlightAlertService flightAlertService, PassengerService passengerService, FlightService flightService) {
+        this.flightAlertService = flightAlertService;
         this.passengerService = passengerService;
         this.flightService = flightService;
     }
@@ -56,13 +56,22 @@ public class AlertController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
+        // Convertir severity en enum Severity
+        Severity severity;
+        try {
+            severity = Severity.valueOf(alertDto.getSeverity().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid severity value: " + alertDto.getSeverity());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
         Date alertDate = alertDto.getAlertDate() != null ? alertDto.getAlertDate() : new Date();
-        Alert alert = alertService.createAlertForPassenger(
-                passenger,
-                flight,
-                alertDate,
+        Alert alert = flightAlertService.createAlertForFlight(
+                alertDto.getPassengerId(),
+                alertDto.getFlightId(),
                 alertDto.getMessage(),
-                alertDto.getSeverity()
+                severity,
+                alertDate
         );
 
         if (alert == null) {
@@ -73,31 +82,34 @@ public class AlertController {
         return ResponseEntity.status(HttpStatus.CREATED).body(alert);
     }
 
+    // Récupérer toutes les alertes
     @GetMapping("/all")
     public ResponseEntity<List<Alert>> getAllAlerts() {
-        List<Alert> alerts = alertService.getAllAlerts();
+        List<Alert> alerts = flightAlertService.getAllAlerts();
         if (alerts.isEmpty()) {
-            return ResponseEntity.noContent().build(); // 204 No Content si aucune alerte
+            return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(alerts); // Retourne toutes les alertes
+        return ResponseEntity.ok(alerts);
     }
 
-    // Récupérer une alerte par son ID
-    @GetMapping
-    public ResponseEntity<?> getAlerts(
-            @RequestParam(required = false) Long id,
-            @RequestParam(required = false) Long passengerId) {
-        if (id != null) {
-            Alert alert = alertService.getAlertById(id);
-            if (alert == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
+    // Récupérer une alerte par ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Alert> getAlertById(@PathVariable Long id) {
+        Alert alert = flightAlertService.getAlertById(id);
+        if (alert != null) {
             return ResponseEntity.ok(alert);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-        if (passengerId != null) {
-            return ResponseEntity.ok(alertService.getAlertsForPassenger(passengerId));
-        }
-        return ResponseEntity.badRequest().body("Please provide either 'id' or 'passengerId'");
     }
 
+    // Récupérer les alertes pour un passager donné
+    @GetMapping("/passenger/{passengerId}")
+    public ResponseEntity<List<Alert>> getAlertsForPassenger(@PathVariable Long passengerId) {
+        List<Alert> alerts = flightAlertService.getAlertsForPassenger(passengerId);
+        if (alerts.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(alerts);
+    }
 }

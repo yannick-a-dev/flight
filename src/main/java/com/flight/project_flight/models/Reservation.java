@@ -31,13 +31,14 @@ public class Reservation {
         this.id = id;
     }
 
-    public Date getReservationDate(Date reservationDate) {
-        return this.reservationDate;
+    public Date getReservationDate() {
+        return reservationDate;
     }
 
     public void setReservationDate(Date reservationDate) {
         this.reservationDate = reservationDate;
     }
+
 
     public String getSeatNumber() {
         return seatNumber;
