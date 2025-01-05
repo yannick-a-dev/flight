@@ -1,15 +1,18 @@
 package com.flight.project_flight.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.flight.project_flight.enums.Severity;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class AlertDto {
     private String message;
-    private Date alertDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime alertDate;
     private String severity;
     private Long passengerId;
-    private Long flightId;
+    private String flightNumber;
 
     public String getMessage() {
         return message;
@@ -35,19 +38,19 @@ public class AlertDto {
         this.passengerId = passengerId;
     }
 
-    public Long getFlightId() {
-        return flightId;
+    public String getFlightNumber() {
+        return flightNumber;
     }
 
-    public void setFlightId(Long flightId) {
-        this.flightId = flightId;
+    public void setFlightNumber(String flighNumber) {
+        this.flightNumber = flighNumber;
     }
 
-    public Date getAlertDate() {
+    public LocalDateTime getAlertDate() {
         return alertDate;
     }
 
-    public void setAlertDate(Date alertDate) {
+    public void setAlertDate(LocalDateTime alertDate) {
         this.alertDate = alertDate;
     }
 }

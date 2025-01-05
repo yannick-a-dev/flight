@@ -16,6 +16,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -37,7 +38,7 @@ public class AlertService {
         this.passengerRepository = passengerRepository;
     }
 
-    public Alert createAlertForPassenger(Passenger passenger, Flight flight, Date alertDate, String message, String severity) {
+    public Alert createAlertForPassenger(Passenger passenger, Flight flight, LocalDateTime alertDate, String message, String severity) {
         if (passenger == null || flight == null || alertDate == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passenger, flight, and alert date must not be null");
         }

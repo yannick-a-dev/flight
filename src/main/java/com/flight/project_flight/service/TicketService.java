@@ -29,7 +29,7 @@ public class TicketService {
         if (ticket.getPassenger() != null && ticket.getFlight() != null) {
             // Assurez-vous que les passagers et vols existent
             Passenger passenger = passengerRepository.findById(ticket.getPassenger().getId()).orElseThrow(() -> new IllegalArgumentException("Passenger not found"));
-            Flight flight = flightRepository.findById(ticket.getFlight().getId()).orElseThrow(() -> new IllegalArgumentException("Flight not found"));
+            Flight flight = flightRepository.findById(ticket.getFlight().getFlightNumber()).orElseThrow(() -> new IllegalArgumentException("Flight not found"));
 
             ticket.setPassenger(passenger);
             ticket.setFlight(flight);
@@ -42,22 +42,18 @@ public class TicketService {
         return ticketRepository.findAll();
     }
 
-    public void deleteTicket(Long id) {
-        if (ticketRepository.existsById(id)) {
-            ticketRepository.deleteById(id);
-        } else {
-            throw new EntityNotFoundException("Ticket with id " + id + " not found");
-        }
-    }
-    
-    public boolean existsById(Long id) {
-        return ticketRepository.existsById(id);
-    }
-
     public List<Ticket> getTicketsByPassenger(Long passengerId) {
         if (!passengerRepository.existsById(passengerId)) {
             throw new EntityNotFoundException("Passenger with id " + passengerId + " not found");
         }
         return ticketRepository.findByPassengerId(passengerId);
+    }
+
+    public boolean existsByTicketNumber(String ticketNumber) {
+        return ticketRepository.existsById(ticketNumber); // Use ticketNumber as String
+    }
+
+    public void deleteTicket(String ticketNumber) {
+        ticketRepository.deleteById(ticketNumber); // Use ticketNumber as String
     }
 }

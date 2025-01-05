@@ -1,9 +1,11 @@
 package com.flight.project_flight.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class PassengerRequest {
@@ -30,14 +32,13 @@ public class PassengerRequest {
     @Size(max = 20, message = "Passport number cannot exceed 20 characters")
     private String passportNumber;
 
-    // Ajouter la date de naissance (dob)
-    private Date dob;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime dob;
 
-    // Constructeur sans argument
     public PassengerRequest() {}
 
-    // Constructeur avec tous les champs
-    public PassengerRequest(String firstName, String lastName, String email, String password, String phone, String passportNumber, Date dob) {
+    public PassengerRequest(Long id, String firstName, String lastName, String email, String password, String phone, String passportNumber, LocalDateTime dob) {
+        this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -47,7 +48,14 @@ public class PassengerRequest {
         this.dob = dob;
     }
 
-    // Getters et setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getFirstName() {
         return firstName;
     }
@@ -96,19 +104,11 @@ public class PassengerRequest {
         this.passportNumber = passportNumber;
     }
 
-    public Date getDob() {
+    public LocalDateTime getDob() {
         return dob;
     }
 
-    public void setDob(Date dob) {
+    public void setDob(LocalDateTime dob) {
         this.dob = dob;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 }

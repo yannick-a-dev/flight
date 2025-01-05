@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface FlightRepository extends JpaRepository<Flight, Long> {
+public interface FlightRepository extends JpaRepository<Flight, String> {
     Optional<Flight> findByFlightNumber(String flightNumber);
     @Query("SELECT r.flight FROM Reservation r WHERE r.passenger.id = :passengerId")
     List<Flight> findFlightsByPassengerId(@Param("passengerId") Long passengerId);

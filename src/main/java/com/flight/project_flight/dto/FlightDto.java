@@ -1,10 +1,13 @@
 package com.flight.project_flight.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.flight.project_flight.models.Reservation;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
+
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -14,11 +17,13 @@ public class FlightDto {
 
     @NotNull(message = "Departure date cannot be null")
     @PastOrPresent(message = "Departure date must be in the past or present")
-    private Date departureTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime departureTime;
 
     @NotNull(message = "Arrival date cannot be null")
     @Future(message = "Arrival date must be in the future")
-    private Date arrivalTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime arrivalTime;
 
     @NotNull(message = "Departure airport cannot be null")
     @Size(min = 3, max = 3, message = "Departure airport code must be exactly 3 characters")
@@ -46,19 +51,19 @@ public class FlightDto {
         this.flightNumber = flightNumber;
     }
 
-    public Date getDepartureTime() {
+    public LocalDateTime getDepartureTime() {
         return departureTime;
     }
 
-    public void setDepartureTime(Date departureTime) {
+    public void setDepartureTime(LocalDateTime departureTime) {
         this.departureTime = departureTime;
     }
 
-    public Date getArrivalTime() {
+    public LocalDateTime getArrivalTime() {
         return arrivalTime;
     }
 
-    public void setArrivalTime(Date arrivalTime) {
+    public void setArrivalTime(LocalDateTime arrivalTime) {
         this.arrivalTime = arrivalTime;
     }
 

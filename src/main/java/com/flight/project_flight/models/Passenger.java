@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -30,9 +31,8 @@ public class Passenger implements UserDetails {
     private String phone;
     @Column(nullable = false)
     private String passportNumber;
-
-    @Temporal(TemporalType.DATE)
-    private Date dob;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime dob;
 
     @OneToMany(mappedBy = "passenger")
     private List<Reservation> reservations;
@@ -55,6 +55,9 @@ public class Passenger implements UserDetails {
     @JsonIdentityReference(alwaysAsId = true)
     private List<Role> roles = new ArrayList<>();
 
+    public Passenger(Long id, String firstName, String lastName, String email, String hashedPassword, String phone, String passportNumber, LocalDateTime dob, Object o1, Object o2) {
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
@@ -63,17 +66,20 @@ public class Passenger implements UserDetails {
     }
     public Passenger() {
     }
-    public Passenger(Long id, String firstName, String lastName, String email, String hashedPassword, String phone, String passportNumber, Date dob, Object reservations, Object alerts) {
+
+    public Passenger(Long id, String email, String firstName, String lastName, String phone, String passportNumber, LocalDateTime dob, List<Reservation> reservations, List<Alert> alerts, String password, boolean enabled, List<Role> roles) {
         this.id = id;
+        this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.email = email;
-        this.password = hashedPassword; // Le mot de passe haché
         this.phone = phone;
         this.passportNumber = passportNumber;
         this.dob = dob;
-        this.reservations = (List<Reservation>) reservations; // Conversion de l'objet en liste de réservations
-        this.alerts = (List<Alert>) alerts; // Conversion de l'objet en liste d'alertes
+        this.reservations = reservations;
+        this.alerts = alerts;
+        this.password = password;
+        this.enabled = enabled;
+        this.roles = roles;
     }
 
     public Long getId() {
@@ -82,6 +88,14 @@ public class Passenger implements UserDetails {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getFirstName() {
@@ -100,14 +114,6 @@ public class Passenger implements UserDetails {
         this.lastName = lastName;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getPhone() {
         return phone;
     }
@@ -124,11 +130,11 @@ public class Passenger implements UserDetails {
         this.passportNumber = passportNumber;
     }
 
-    public Date getDob() {
+    public LocalDateTime getDob() {
         return dob;
     }
 
-    public void setDob(Date dob) {
+    public void setDob(LocalDateTime dob) {
         this.dob = dob;
     }
 
@@ -148,6 +154,7 @@ public class Passenger implements UserDetails {
         this.alerts = alerts;
     }
 
+    @Override
     public String getPassword() {
         return password;
     }
@@ -176,6 +183,7 @@ public class Passenger implements UserDetails {
         this.password = password;
     }
 
+    @Override
     public boolean isEnabled() {
         return enabled;
     }

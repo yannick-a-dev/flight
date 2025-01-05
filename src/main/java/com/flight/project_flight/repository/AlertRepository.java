@@ -6,6 +6,7 @@ import com.flight.project_flight.models.Passenger;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -13,5 +14,5 @@ import java.util.List;
 public interface AlertRepository extends JpaRepository<Alert, Long> {
     List<Alert> findByPassengerId(Long passengerId);
 
-    Alert findByPassengerAndFlightAndMessageAndAlertDate(Passenger passenger, Flight flight, String message, Date alertDate);
+    Alert findByPassengerAndFlightAndMessageAndAlertDate(Passenger passenger, Flight flight, String message, LocalDateTime alertDate);
 }

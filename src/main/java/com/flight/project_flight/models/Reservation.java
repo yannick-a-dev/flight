@@ -1,8 +1,10 @@
 package com.flight.project_flight.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -11,7 +13,8 @@ public class Reservation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Date reservationDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime reservationDate;
     private String seatNumber;
     private BigDecimal price;
 
@@ -31,14 +34,13 @@ public class Reservation {
         this.id = id;
     }
 
-    public Date getReservationDate() {
+    public LocalDateTime getReservationDate() {
         return reservationDate;
     }
 
-    public void setReservationDate(Date reservationDate) {
+    public void setReservationDate(LocalDateTime reservationDate) {
         this.reservationDate = reservationDate;
     }
-
 
     public String getSeatNumber() {
         return seatNumber;

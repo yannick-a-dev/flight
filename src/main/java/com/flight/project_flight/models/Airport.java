@@ -5,7 +5,6 @@ import lombok.Data;
 import java.util.List;
 
 @Entity
-@Data
 @Table(name = "airport")
 public class Airport {
     @Id
@@ -20,4 +19,52 @@ public class Airport {
 
     @OneToMany(mappedBy = "arrivalAirport")
     private List<Flight> arrivalFlights;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public List<Flight> getDepartureFlights() {
+        return departureFlights;
+    }
+
+    public void setDepartureFlights(List<Flight> departureFlights) {
+        this.departureFlights = departureFlights;
+    }
+
+    public List<Flight> getArrivalFlights() {
+        return arrivalFlights;
+    }
+
+    public void setArrivalFlights(List<Flight> arrivalFlights) {
+        this.arrivalFlights = arrivalFlights;
+    }
 }

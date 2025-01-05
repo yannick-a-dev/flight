@@ -7,6 +7,7 @@ import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.repository.AlertRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class FlightAlertService {
         this.alertRepository = alertRepository;
     }
 
-    public Alert createAlertForFlight(Long passengerId, Long flightId, String message, Severity severity, Date alertDate) {
+    public Alert createAlertForFlight(Long passengerId, String flightNumber, String message, Severity severity, LocalDateTime alertDate) {
         // Récupérer les informations sur le passager
         Passenger passenger = passengerService.findById(passengerId);
         if (passenger == null) {
@@ -33,7 +34,7 @@ public class FlightAlertService {
         }
 
         // Récupérer les informations sur le vol
-        Flight flight = flightService.findById(flightId);
+        Flight flight = flightService.findByFlightNumber(flightNumber);
         if (flight == null) {
             return null;
         }

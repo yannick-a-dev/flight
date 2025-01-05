@@ -1,5 +1,8 @@
 package com.flight.project_flight.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -11,7 +14,8 @@ public class PassengerDTO {
     private String email;
     private String phone;
     private String passportNumber;
-    private Date dob;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime dob;
     private List<AlertDto> alerts = new ArrayList<>();
 
     public Long getId() {
@@ -62,11 +66,11 @@ public class PassengerDTO {
         this.passportNumber = passportNumber;
     }
 
-    public Date getDob() {
+    public LocalDateTime getDob() {
         return dob;
     }
 
-    public void setDob(Date dob) {
+    public void setDob(LocalDateTime dob) {
         this.dob = dob;
     }
 

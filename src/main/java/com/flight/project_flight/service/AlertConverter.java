@@ -14,9 +14,9 @@ public class AlertConverter {
         AlertDto alertDto = new AlertDto();
         alertDto.setMessage(alert.getMessage());
         alertDto.setAlertDate(alert.getAlertDate());
-        alertDto.setSeverity(alert.getSeverity().name()); // Conversion de l'énumération en chaîne
+        alertDto.setSeverity(alert.getSeverity().name());
         alertDto.setPassengerId(alert.getPassenger().getId());
-        alertDto.setFlightId(alert.getFlight().getId());
+        alertDto.setFlightNumber(alert.getFlight().getFlightNumber());
         return alertDto;
     }
 
@@ -24,7 +24,7 @@ public class AlertConverter {
         Alert alert = new Alert();
         alert.setMessage(alertDto.getMessage());
         alert.setAlertDate(alertDto.getAlertDate());
-        alert.setSeverity(Severity.valueOf(alertDto.getSeverity())); // Conversion de la chaîne en énumération
+        alert.setSeverity(Severity.valueOf(alertDto.getSeverity()));
         alert.setPassenger(passenger);
         alert.setFlight(flight);
         return alert;

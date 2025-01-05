@@ -1,6 +1,8 @@
 package com.flight.project_flight.service;
 
 import com.flight.project_flight.dto.FlightDto;
+import com.flight.project_flight.exception.FlightNotFoundException;
+import com.flight.project_flight.exception.InvalidFlightDataException;
 import com.flight.project_flight.mapper.AlertMapper;
 import com.flight.project_flight.mapper.ReservationMapper;
 import com.flight.project_flight.models.Flight;
@@ -48,21 +50,28 @@ public class FlightService {
         return flightRepository.save(flight);
     }
 
-    public Flight findById(Long id) {
-        return flightRepository.findById(id).orElseThrow(() -> new RuntimeException("Flight not found"));
+    public Flight findByFlightNumber(String flightNumber) {
+        return flightRepository.findByFlightNumber(flightNumber).orElseThrow(() -> new RuntimeException("Flight not found"));
     }
     public List<Flight> getAllFlights() {
         return flightRepository.findAll();
     }
 
-    public Optional<Flight> getFlightById(Long id) {
-        return flightRepository.findById(id);
+    public Optional<Flight> getFlightByFlightNumber(String flightNumber) {
+        return flightRepository.findByFlightNumber(flightNumber);
     }
 
-    public Flight updateFlight(Long id, Flight flightDetails) {
-        Flight flight = flightRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Flight not found with id " + id));
+    public Flight updateFlight(String flightNumber, Flight flightDetails) {
+        // Find the flight by flightNumber
+        Flight flight = flightRepository.findByFlightNumber(flightNumber)
+                .orElseThrow(() -> new FlightNotFoundException(flightNumber));
 
+        // Validate flight data (example)
+        if (flightDetails.getDepartureTime().isAfter(flightDetails.getArrivalTime())) {
+            throw new InvalidFlightDataException("Departure time cannot be after arrival time.");
+        }
+
+        // Update flight details
         flight.setFlightNumber(flightDetails.getFlightNumber());
         flight.setDepartureTime(flightDetails.getDepartureTime());
         flight.setArrivalTime(flightDetails.getArrivalTime());
@@ -72,12 +81,15 @@ public class FlightService {
         flight.setReservations(flightDetails.getReservations());
         flight.setAlerts(flightDetails.getAlerts());
 
+        // Save and return the updated flight
         return flightRepository.save(flight);
     }
 
-    public void deleteFlight(Long id) {
-        Flight flight = flightRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Flight not found with id " + id));
+
+
+    public void deleteFlight(String flightNumber) {
+        Flight flight = flightRepository.findByFlightNumber(flightNumber)
+                .orElseThrow(() -> new RuntimeException("Flight not found with id " + flightNumber));
         flightRepository.delete(flight);
     }
     public List<Flight> getFlightsByPassenger(Long passengerId) {

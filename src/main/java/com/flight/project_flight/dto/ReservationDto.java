@@ -4,13 +4,14 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class ReservationDto {
     private Long id;
     @NotNull(message = "Reservation date cannot be null")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private Date reservationDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime reservationDate;
     private String seatNumber;
     private BigDecimal price;
     @NotNull(message = "Passenger ID cannot be null")
@@ -26,11 +27,11 @@ public class ReservationDto {
         this.id = id;
     }
 
-    public Date getReservationDate() {
+    public LocalDateTime getReservationDate() {
         return reservationDate;
     }
 
-    public void setReservationDate(Date reservationDate) {
+    public void setReservationDate(LocalDateTime reservationDate) {
         this.reservationDate = reservationDate;
     }
 

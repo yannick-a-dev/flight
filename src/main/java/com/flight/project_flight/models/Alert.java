@@ -1,11 +1,13 @@
 package com.flight.project_flight.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.flight.project_flight.enums.Severity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -15,7 +17,9 @@ public class Alert {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String message;
-    private Date alertDate;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime alertDate;
     private Severity severity;
 
     @ManyToOne
@@ -49,11 +53,11 @@ public class Alert {
         this.message = message;
     }
 
-    public Date getAlertDate() {
+    public LocalDateTime getAlertDate() {
         return alertDate;
     }
 
-    public void setAlertDate(Date alertDate) {
+    public void setAlertDate(LocalDateTime alertDate) {
         this.alertDate = alertDate;
     }
 

@@ -1,6 +1,8 @@
 package com.flight.project_flight.controller;
 
 import com.flight.project_flight.dto.FlightDto;
+import com.flight.project_flight.exception.FlightNotFoundException;
+import com.flight.project_flight.exception.InvalidFlightDataException;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.service.FlightService;
 import jakarta.validation.Valid;
@@ -45,20 +47,22 @@ public class FlightController {
         return ResponseEntity.ok(flights);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Flight> updateFlight(@PathVariable Long id, @RequestBody Flight flight) {
+    @PutMapping("/{flightNumber}")
+    public ResponseEntity<Flight> updateFlight(@PathVariable String flightNumber, @RequestBody Flight flight) {
         try {
-            Flight updatedFlight = flightService.updateFlight(id, flight);
+            Flight updatedFlight = flightService.updateFlight(flightNumber, flight);
             return ResponseEntity.ok(updatedFlight);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+        } catch (FlightNotFoundException e) {
+            return ResponseEntity.notFound().build();  // Handle not found case
+        } catch (InvalidFlightDataException e) {
+            return ResponseEntity.badRequest().build();  // Handle invalid data case
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFlight(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteFlight(@PathVariable String flightNumber) {
         try {
-            flightService.deleteFlight(id);
+            flightService.deleteFlight(flightNumber);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();

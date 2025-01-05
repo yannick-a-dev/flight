@@ -1,10 +1,12 @@
 package com.flight.project_flight.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -12,10 +14,9 @@ import java.util.List;
 @Table(name = "ticket")
 public class Ticket {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     private String ticketNumber;
-    private Date issueDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime issueDate;
     private BigDecimal price;
 
     @ManyToOne
@@ -29,14 +30,6 @@ public class Ticket {
     @JsonManagedReference("ticket-alerts")
     private List<Alert> alerts;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public String getTicketNumber() {
         return ticketNumber;
     }
@@ -45,11 +38,11 @@ public class Ticket {
         this.ticketNumber = ticketNumber;
     }
 
-    public Date getIssueDate() {
+    public LocalDateTime getIssueDate() {
         return issueDate;
     }
 
-    public void setIssueDate(Date issueDate) {
+    public void setIssueDate(LocalDateTime issueDate) {
         this.issueDate = issueDate;
     }
 

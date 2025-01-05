@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class AlertController {
 
     @PostMapping
     public ResponseEntity<Alert> createAlert(@RequestBody AlertDto alertDto) {
-        if (alertDto.getPassengerId() == null || alertDto.getFlightId() == null) {
+        if (alertDto.getPassengerId() == null || alertDto.getFlightNumber() == null) {
             log.error("PassengerId or FlightId is missing in the request body.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
@@ -50,9 +51,9 @@ public class AlertController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
-        Flight flight = flightService.findById(alertDto.getFlightId());
+        Flight flight = flightService.findByFlightNumber(alertDto.getFlightNumber());
         if (flight == null) {
-            log.error("Flight not found with ID: " + alertDto.getFlightId());
+            log.error("Flight not found with ID: " + alertDto.getFlightNumber());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
@@ -65,17 +66,17 @@ public class AlertController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        Date alertDate = alertDto.getAlertDate() != null ? alertDto.getAlertDate() : new Date();
+        Comparable<? extends Comparable<?>> alertDate = alertDto.getAlertDate() != null ? alertDto.getAlertDate() : new Date();
         Alert alert = flightAlertService.createAlertForFlight(
                 alertDto.getPassengerId(),
-                alertDto.getFlightId(),
+                alertDto.getFlightNumber(),
                 alertDto.getMessage(),
                 severity,
-                alertDate
+                (LocalDateTime) alertDate
         );
 
         if (alert == null) {
-            log.error("Failed to create alert for Passenger ID: " + alertDto.getPassengerId() + " and Flight ID: " + alertDto.getFlightId());
+            log.error("Failed to create alert for Passenger ID: " + alertDto.getPassengerId() + " and Flight ID: " + alertDto.getFlightNumber());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
 
