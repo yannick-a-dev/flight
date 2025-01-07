@@ -1,11 +1,12 @@
 package com.flight.project_flight.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
+import com.flight.project_flight.enums.FlightStatus;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -15,12 +16,12 @@ public class FlightDto {
 
     @NotNull(message = "Departure date cannot be null")
     @PastOrPresent(message = "Departure date must be in the past or present")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime departureTime;
 
     @NotNull(message = "Arrival date cannot be null")
     @Future(message = "Arrival date must be in the future")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime arrivalTime;
 
     @NotNull(message = "Departure airport cannot be null")
@@ -33,7 +34,7 @@ public class FlightDto {
 
     @NotNull(message = "Status cannot be null")
     @Size(min = 1, max = 50, message = "Status must be between 1 and 50 characters")
-    private String status;
+    private FlightStatus status;
 
     @NotNull(message = "Reservations list cannot be null")
     private List<ReservationDto> reservations;
@@ -81,11 +82,11 @@ public class FlightDto {
         this.arrivalAirport = arrivalAirport;
     }
 
-    public String getStatus() {
+    public FlightStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(FlightStatus status) {
         this.status = status;
     }
 

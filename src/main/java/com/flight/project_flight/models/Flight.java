@@ -2,10 +2,10 @@ package com.flight.project_flight.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
+import com.flight.project_flight.enums.FlightStatus;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -16,13 +16,14 @@ import java.util.List;
 public class Flight {
     @Id
     private String flightNumber;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime departureTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime arrivalTime;
     private String departureAirport;
     private String arrivalAirport;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private FlightStatus status;
 
     @OneToMany(mappedBy = "flight")
     private List<Reservation> reservations;
@@ -71,11 +72,11 @@ public class Flight {
         this.arrivalAirport = arrivalAirport;
     }
 
-    public String getStatus() {
+    public FlightStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(FlightStatus status) {
         this.status = status;
     }
 

@@ -61,28 +61,27 @@ public class FlightService {
         return flightRepository.findByFlightNumber(flightNumber);
     }
 
-    public Flight updateFlight(String flightNumber, Flight flightDetails) {
+    public Flight updateFlight(String flightNumber, FlightDto flightDto) {
         // Find the flight by flightNumber
-        Flight flight = flightRepository.findByFlightNumber(flightNumber)
+        Flight existingFlight = flightRepository.findByFlightNumber(flightNumber)
                 .orElseThrow(() -> new FlightNotFoundException(flightNumber));
 
-        // Validate flight data (example)
-        if (flightDetails.getDepartureTime().isAfter(flightDetails.getArrivalTime())) {
+        // Validate flight data
+        if (flightDto.getDepartureTime().isAfter(flightDto.getArrivalTime())) {
             throw new InvalidFlightDataException("Departure time cannot be after arrival time.");
         }
 
-        // Update flight details
-        flight.setFlightNumber(flightDetails.getFlightNumber());
-        flight.setDepartureTime(flightDetails.getDepartureTime());
-        flight.setArrivalTime(flightDetails.getArrivalTime());
-        flight.setDepartureAirport(flightDetails.getDepartureAirport());
-        flight.setArrivalAirport(flightDetails.getArrivalAirport());
-        flight.setStatus(flightDetails.getStatus());
-        flight.setReservations(flightDetails.getReservations());
-        flight.setAlerts(flightDetails.getAlerts());
+        // Map DTO to entity
+        existingFlight.setDepartureTime(flightDto.getDepartureTime());
+        existingFlight.setArrivalTime(flightDto.getArrivalTime());
+        existingFlight.setDepartureAirport(flightDto.getDepartureAirport());
+        existingFlight.setArrivalAirport(flightDto.getArrivalAirport());
+        existingFlight.setStatus(flightDto.getStatus());
+        existingFlight.setReservations(reservationMapper.mapToReservations(flightDto.getReservations(), existingFlight));
+        existingFlight.setAlerts(alertMapper.mapToAlerts(flightDto.getAlerts(), existingFlight));
 
         // Save and return the updated flight
-        return flightRepository.save(flight);
+        return flightRepository.save(existingFlight);
     }
 
 

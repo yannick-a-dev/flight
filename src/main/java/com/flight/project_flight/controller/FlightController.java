@@ -47,14 +47,14 @@ public class FlightController {
     }
 
     @PutMapping("/{flightNumber}")
-    public ResponseEntity<Flight> updateFlight(@PathVariable String flightNumber, @RequestBody Flight flight) {
+    public ResponseEntity<Flight> updateFlight(@PathVariable String flightNumber, @RequestBody FlightDto flightDto) {
         try {
-            Flight updatedFlight = flightService.updateFlight(flightNumber, flight);
+            Flight updatedFlight = flightService.updateFlight(flightNumber, flightDto);
             return ResponseEntity.ok(updatedFlight);
         } catch (FlightNotFoundException e) {
-            return ResponseEntity.notFound().build();  // Handle not found case
+            return ResponseEntity.notFound().build();
         } catch (InvalidFlightDataException e) {
-            return ResponseEntity.badRequest().build();  // Handle invalid data case
+            return ResponseEntity.badRequest().build();
         }
     }
 

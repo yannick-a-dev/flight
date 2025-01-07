@@ -1,17 +1,25 @@
 package com.flight.project_flight.mapper;
 
 import com.flight.project_flight.dto.ReservationDto;
+import com.flight.project_flight.exception.PassengerNotFoundException;
+import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.models.Reservation;
+import com.flight.project_flight.repository.PassengerRepository;
 import com.flight.project_flight.service.PassengerService;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
 public class ReservationMapper {
+    private final PassengerRepository passengerRepository;
 
     private final PassengerService passengerService;
 
-    public ReservationMapper(PassengerService passengerService) {
+    public ReservationMapper(PassengerRepository passengerRepository, PassengerService passengerService) {
+        this.passengerRepository = passengerRepository;
         this.passengerService = passengerService;
     }
 
@@ -32,5 +40,23 @@ public class ReservationMapper {
         reservationDto.setPrice(reservation.getPrice());
         reservationDto.setPassengerId(reservation.getPassenger().getId());
         return reservationDto;
+    }
+
+    public List<Reservation> mapToReservations(List<ReservationDto> reservationDtos, Flight flight) {
+        return reservationDtos.stream()
+                .map(dto -> {
+                    Reservation reservation = new Reservation();
+                    reservation.setId(dto.getId());
+                    reservation.setReservationDate(dto.getReservationDate());
+                    reservation.setSeatNumber(dto.getSeatNumber());
+                    reservation.setPrice(dto.getPrice());
+                    // Extraire le Passenger de l'Optional
+                    Passenger passenger = passengerRepository.findById(dto.getPassengerId())
+                            .orElseThrow(() -> new PassengerNotFoundException("Passenger not found with id: " + dto.getPassengerId()));
+                    reservation.setPassenger(passenger);
+                    reservation.setFlight(flight);
+                    return reservation;
+                })
+                .collect(Collectors.toList());
     }
 }

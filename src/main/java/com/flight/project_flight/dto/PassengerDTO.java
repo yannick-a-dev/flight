@@ -1,6 +1,8 @@
 package com.flight.project_flight.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,7 +15,7 @@ public class PassengerDTO {
     private String email;
     private String phone;
     private String passportNumber;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime dob;
     private List<AlertDto> alerts = new ArrayList<>();
 
