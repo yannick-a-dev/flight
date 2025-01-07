@@ -6,7 +6,6 @@ import com.flight.project_flight.exception.InvalidFlightDataException;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.service.FlightService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;

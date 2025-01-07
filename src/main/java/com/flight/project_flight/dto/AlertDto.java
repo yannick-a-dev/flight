@@ -1,10 +1,8 @@
 package com.flight.project_flight.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.flight.project_flight.enums.Severity;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 public class AlertDto {
     private String message;

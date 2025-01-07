@@ -1,7 +1,6 @@
 package com.flight.project_flight.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
 
 
 public class RefreshTokenRequest {

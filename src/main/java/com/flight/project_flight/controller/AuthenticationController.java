@@ -1,10 +1,10 @@
 package com.flight.project_flight.controller;
 
+import com.flight.project_flight.config.JwtService;
 import com.flight.project_flight.dto.*;
 import com.flight.project_flight.models.MessageResponse;
 import com.flight.project_flight.models.PassengerRequest;
 import com.flight.project_flight.service.AuthService;
-import com.flight.project_flight.config.JwtService;
 import com.flight.project_flight.service.PassengerService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController

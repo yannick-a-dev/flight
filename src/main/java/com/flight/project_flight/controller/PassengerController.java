@@ -6,10 +6,8 @@ import com.flight.project_flight.service.AlertConverter;
 import com.flight.project_flight.service.AlertService;
 import com.flight.project_flight.service.FlightService;
 import com.flight.project_flight.service.PassengerService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;

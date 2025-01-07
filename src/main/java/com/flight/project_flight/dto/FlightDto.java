@@ -1,14 +1,12 @@
 package com.flight.project_flight.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.flight.project_flight.models.Reservation;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 public class FlightDto {
