@@ -3,6 +3,8 @@ package com.flight.project_flight.models;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import com.flight.project_flight.enums.Severity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -18,7 +20,7 @@ public class Alert {
     private Long id;
     private String message;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime alertDate;
     private Severity severity;
 
