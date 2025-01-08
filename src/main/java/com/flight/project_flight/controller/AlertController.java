@@ -2,6 +2,7 @@ package com.flight.project_flight.controller;
 
 import com.flight.project_flight.dto.AlertDto;
 import com.flight.project_flight.enums.Severity;
+import com.flight.project_flight.exception.FlightNotFoundException;
 import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Passenger;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 
 @RestController
@@ -36,24 +38,27 @@ public class AlertController {
 
     @PostMapping
     public ResponseEntity<Alert> createAlert(@RequestBody AlertDto alertDto) {
+        // Vérification des champs obligatoires
         if (alertDto.getPassengerId() == null || alertDto.getFlightNumber() == null) {
             log.error("PassengerId or FlightId is missing in the request body.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
+        // Recherche du passager
         Passenger passenger = passengerService.findById(alertDto.getPassengerId());
         if (passenger == null) {
             log.error("Passenger not found with ID: " + alertDto.getPassengerId());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
-        Flight flight = flightService.findByFlightNumber(alertDto.getFlightNumber());
-        if (flight == null) {
-            log.error("Flight not found with ID: " + alertDto.getFlightNumber());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+        // Recherche du vol, gestion de l'Optional
+        Optional<Flight> flightOptional = flightService.findByFlightNumber(alertDto.getFlightNumber());
+        Flight flight = flightOptional.orElseThrow(() -> {
+            log.error("Flight not found with Flight Number: " + alertDto.getFlightNumber());
+            return new FlightNotFoundException(alertDto.getFlightNumber());
+        });
 
-        // Convertir severity en enum Severity
+        // Conversion de severity en enum Severity
         Severity severity;
         try {
             severity = Severity.valueOf(alertDto.getSeverity().toUpperCase());
@@ -62,22 +67,28 @@ public class AlertController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        Comparable<? extends Comparable<?>> alertDate = alertDto.getAlertDate() != null ? alertDto.getAlertDate() : new Date();
+        // Si la date d'alerte est null, on l'initialise à la date actuelle
+        LocalDateTime alertDate = alertDto.getAlertDate() != null ? alertDto.getAlertDate() : LocalDateTime.now();
+
+        // Création de l'alerte
         Alert alert = flightAlertService.createAlertForFlight(
                 alertDto.getPassengerId(),
                 alertDto.getFlightNumber(),
                 alertDto.getMessage(),
                 severity,
-                (LocalDateTime) alertDate
+                alertDate
         );
 
+        // Gestion d'une erreur lors de la création de l'alerte
         if (alert == null) {
-            log.error("Failed to create alert for Passenger ID: " + alertDto.getPassengerId() + " and Flight ID: " + alertDto.getFlightNumber());
+            log.error("Failed to create alert for Passenger ID: " + alertDto.getPassengerId() + " and Flight Number: " + alertDto.getFlightNumber());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
 
+        // Retour de l'alerte créée avec le statut CREATED
         return ResponseEntity.status(HttpStatus.CREATED).body(alert);
     }
+
 
     // Récupérer toutes les alertes
     @GetMapping("/all")

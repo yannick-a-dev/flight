@@ -33,8 +33,9 @@ public class FlightAlertService {
             return null;
         }
 
-        // Récupérer les informations sur le vol
-        Flight flight = flightService.findByFlightNumber(flightNumber);
+        Flight flight = flightService.findByFlightNumber(flightNumber)
+                .orElse(null);
+
         if (flight == null) {
             return null;
         }

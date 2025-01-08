@@ -2,7 +2,11 @@ package com.flight.project_flight.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "airport")
@@ -14,11 +18,31 @@ public class Airport {
     private String location;
     private String code;
 
-    @OneToMany(mappedBy = "departureAirport")
-    private List<Flight> departureFlights;
+    @OneToMany(mappedBy = "departureAirport", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Flight> departureFlights = new HashSet<>();
 
-    @OneToMany(mappedBy = "arrivalAirport")
-    private List<Flight> arrivalFlights;
+    @OneToMany(mappedBy = "arrivalAirport", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Flight> arrivalFlights = new HashSet<>();
+
+    public Airport() {
+
+    }
+
+    public Airport(Long id, String name, String location, String code, Set<Flight> departureFlights, Set<Flight> arrivalFlights) {
+        this.id = id;
+        this.name = name;
+        this.location = location;
+        this.code = code;
+        this.departureFlights = departureFlights;
+        this.arrivalFlights = arrivalFlights;
+    }
+
+    public Airport(Long id, String code, String location, String name) {
+        this.id = id;
+        this.name = name;
+        this.location = location;
+        this.code = code;
+    }
 
     public Long getId() {
         return id;
@@ -52,19 +76,19 @@ public class Airport {
         this.code = code;
     }
 
-    public List<Flight> getDepartureFlights() {
+    public Set<Flight> getDepartureFlights() {
         return departureFlights;
     }
 
-    public void setDepartureFlights(List<Flight> departureFlights) {
+    public void setDepartureFlights(Set<Flight> departureFlights) {
         this.departureFlights = departureFlights;
     }
 
-    public List<Flight> getArrivalFlights() {
+    public Set<Flight> getArrivalFlights() {
         return arrivalFlights;
     }
 
-    public void setArrivalFlights(List<Flight> arrivalFlights) {
+    public void setArrivalFlights(Set<Flight> arrivalFlights) {
         this.arrivalFlights = arrivalFlights;
     }
 }

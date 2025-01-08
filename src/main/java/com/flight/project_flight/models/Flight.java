@@ -18,12 +18,21 @@ import java.util.List;
 public class Flight {
     @Id
     private String flightNumber;
+
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime departureTime;
+
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime arrivalTime;
-    private String departureAirport;
-    private String arrivalAirport;
+
+    @ManyToOne
+    @JoinColumn(name = "departure_airport_id")
+    private Airport departureAirport;
+
+    @ManyToOne
+    @JoinColumn(name = "arrival_airport_id")
+    private Airport arrivalAirport;
+
     @Enumerated(EnumType.STRING)
     private FlightStatus status;
 
@@ -58,19 +67,19 @@ public class Flight {
         this.arrivalTime = arrivalTime;
     }
 
-    public String getDepartureAirport() {
+    public Airport getDepartureAirport() {
         return departureAirport;
     }
 
-    public void setDepartureAirport(String departureAirport) {
+    public void setDepartureAirport(Airport departureAirport) {
         this.departureAirport = departureAirport;
     }
 
-    public String getArrivalAirport() {
+    public Airport getArrivalAirport() {
         return arrivalAirport;
     }
 
-    public void setArrivalAirport(String arrivalAirport) {
+    public void setArrivalAirport(Airport arrivalAirport) {
         this.arrivalAirport = arrivalAirport;
     }
 

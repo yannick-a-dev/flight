@@ -1,11 +1,14 @@
 package com.flight.project_flight.service;
 
 import com.flight.project_flight.dto.FlightDto;
+import com.flight.project_flight.exception.AirportNotFoundException;
 import com.flight.project_flight.exception.FlightNotFoundException;
 import com.flight.project_flight.exception.InvalidFlightDataException;
 import com.flight.project_flight.mapper.AlertMapper;
 import com.flight.project_flight.mapper.ReservationMapper;
+import com.flight.project_flight.models.Airport;
 import com.flight.project_flight.models.Flight;
+import com.flight.project_flight.repository.AirportRepository;
 import com.flight.project_flight.repository.FlightRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,26 +23,42 @@ public class FlightService {
     private final ReservationMapper reservationMapper;
     private final PassengerService passengerService;
 
-    public FlightService(FlightRepository flightRepository, AlertMapper alertMapper, ReservationMapper reservationMapper, PassengerService passengerService) {
+    private final AirportRepository airportRepository;
+
+    public FlightService(FlightRepository flightRepository, AlertMapper alertMapper, ReservationMapper reservationMapper, PassengerService passengerService, AirportRepository airportRepository) {
         this.flightRepository = flightRepository;
         this.alertMapper = alertMapper;
         this.reservationMapper = reservationMapper;
         this.passengerService = passengerService;
+        this.airportRepository = airportRepository;
     }
 
 
     public Flight createFlight(FlightDto flightDto) {
+        // Vérifier si un vol avec le même numéro existe déjà
         if (flightRepository.findByFlightNumber(flightDto.getFlightNumber()).isPresent()) {
             throw new IllegalArgumentException("Flight with this flight number already exists.");
         }
 
+        // Créer un nouvel objet Flight
         Flight flight = new Flight();
         flight.setFlightNumber(flightDto.getFlightNumber());
         flight.setDepartureTime(flightDto.getDepartureTime());
         flight.setArrivalTime(flightDto.getArrivalTime());
-        flight.setDepartureAirport(flightDto.getDepartureAirport());
-        flight.setArrivalAirport(flightDto.getArrivalAirport());
+
+        // Convertir les AirportDto en objets Airport
+        Airport departureAirport = airportRepository.findByCode(flightDto.getDepartureAirport().getCode())
+                .orElseThrow(() -> new IllegalArgumentException("Departure airport not found."));
+        Airport arrivalAirport = airportRepository.findByCode(flightDto.getArrivalAirport().getCode())
+                .orElseThrow(() -> new IllegalArgumentException("Arrival airport not found."));
+
+        flight.setDepartureAirport(departureAirport);
+        flight.setArrivalAirport(arrivalAirport);
+
+        // Définir le statut du vol
         flight.setStatus(flightDto.getStatus());
+
+        // Mapper les réservations et alertes depuis les DTOs
         flight.setReservations(flightDto.getReservations().stream()
                 .map(reservationMapper::toEntity)
                 .collect(Collectors.toList()));
@@ -47,11 +66,13 @@ public class FlightService {
                 .map(alertMapper::toEntity)
                 .collect(Collectors.toList()));
 
+        // Sauvegarder le vol
         return flightRepository.save(flight);
     }
 
-    public Flight findByFlightNumber(String flightNumber) {
-        return flightRepository.findByFlightNumber(flightNumber).orElseThrow(() -> new RuntimeException("Flight not found"));
+
+    public Optional<Flight> findByFlightNumber(String flightNumber) {
+        return flightRepository.findByFlightNumber(flightNumber);
     }
     public List<Flight> getAllFlights() {
         return flightRepository.findAll();
@@ -62,27 +83,37 @@ public class FlightService {
     }
 
     public Flight updateFlight(String flightNumber, FlightDto flightDto) {
-        // Find the flight by flightNumber
+        // 1. Find the existing flight by its flight number
         Flight existingFlight = flightRepository.findByFlightNumber(flightNumber)
                 .orElseThrow(() -> new FlightNotFoundException(flightNumber));
 
-        // Validate flight data
+        // 2. Validate the flight data
         if (flightDto.getDepartureTime().isAfter(flightDto.getArrivalTime())) {
             throw new InvalidFlightDataException("Departure time cannot be after arrival time.");
         }
 
-        // Map DTO to entity
+        // 3. Map DTO to entity
         existingFlight.setDepartureTime(flightDto.getDepartureTime());
         existingFlight.setArrivalTime(flightDto.getArrivalTime());
-        existingFlight.setDepartureAirport(flightDto.getDepartureAirport());
-        existingFlight.setArrivalAirport(flightDto.getArrivalAirport());
+
+        // Convert AirportDTO to Airport entity using the airportRepository
+        Airport departureAirport = airportRepository.findByCode(flightDto.getDepartureAirport().getCode())
+                .orElseThrow(() -> new AirportNotFoundException(flightDto.getDepartureAirport().getCode()));
+        Airport arrivalAirport = airportRepository.findByCode(flightDto.getArrivalAirport().getCode())
+                .orElseThrow(() -> new AirportNotFoundException(flightDto.getArrivalAirport().getCode()));
+
+        existingFlight.setDepartureAirport(departureAirport);
+        existingFlight.setArrivalAirport(arrivalAirport);
+
+        // Update other fields
         existingFlight.setStatus(flightDto.getStatus());
         existingFlight.setReservations(reservationMapper.mapToReservations(flightDto.getReservations(), existingFlight));
         existingFlight.setAlerts(alertMapper.mapToAlerts(flightDto.getAlerts(), existingFlight));
 
-        // Save and return the updated flight
+        // 4. Save and return the updated flight
         return flightRepository.save(existingFlight);
     }
+
 
 
 
