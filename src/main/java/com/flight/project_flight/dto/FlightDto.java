@@ -7,9 +7,11 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
+
 import java.time.LocalDateTime;
 import java.util.List;
-
+@Data
 public class FlightDto {
     @NotNull(message = "Flight number cannot be null")
     private String flightNumber;

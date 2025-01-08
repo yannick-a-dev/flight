@@ -6,19 +6,21 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import com.flight.project_flight.enums.FlightStatus;
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
 @Entity
+@Data
 @Table(name = "flight")
 public class Flight {
     @Id
     private String flightNumber;
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime departureTime;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime arrivalTime;
     private String departureAirport;
     private String arrivalAirport;

@@ -1,11 +1,13 @@
 package com.flight.project_flight.dto;
 
+import lombok.Data;
+
+@Data
 public class TokenResponse {
     private String accessToken;
     private String refreshToken;
     private long expiresIn;
 
-    // Constructeur avec initialisation
     public TokenResponse(String accessToken, String refreshToken, String expiresIn) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;

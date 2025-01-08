@@ -1,11 +1,11 @@
 package com.flight.project_flight.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
+import lombok.Data;
 
 import java.time.LocalDateTime;
-
+@Data
 public class AlertDto {
     private String message;
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
@@ -20,6 +20,14 @@ public class AlertDto {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public LocalDateTime getAlertDate() {
+        return alertDate;
+    }
+
+    public void setAlertDate(LocalDateTime alertDate) {
+        this.alertDate = alertDate;
     }
 
     public String getSeverity() {
@@ -42,15 +50,7 @@ public class AlertDto {
         return flightNumber;
     }
 
-    public void setFlightNumber(String flighNumber) {
-        this.flightNumber = flighNumber;
-    }
-
-    public LocalDateTime getAlertDate() {
-        return alertDate;
-    }
-
-    public void setAlertDate(LocalDateTime alertDate) {
-        this.alertDate = alertDate;
+    public void setFlightNumber(String flightNumber) {
+        this.flightNumber = flightNumber;
     }
 }

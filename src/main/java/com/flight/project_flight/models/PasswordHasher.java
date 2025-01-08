@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class PasswordHasher {
     private final PasswordEncoder passwordEncoder;
-
     @Autowired
     public PasswordHasher(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;

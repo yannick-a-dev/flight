@@ -2,8 +2,7 @@ package com.flight.project_flight.controller;
 
 import com.flight.project_flight.config.JwtService;
 import com.flight.project_flight.dto.*;
-import com.flight.project_flight.models.MessageResponse;
-import com.flight.project_flight.models.PassengerRequest;
+import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.service.AuthService;
 import com.flight.project_flight.service.PassengerService;
 import jakarta.validation.Valid;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
@@ -67,23 +65,16 @@ public class AuthenticationController {
     }
 
     @PostMapping(value = "/register", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> registerPassenger(@Valid @RequestBody PassengerRequest passengerRequest) {
-        try {
-            passengerService.registerPassenger(passengerRequest);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new MessageResponse("Passenger registered successfully"));
-        } catch (Exception e) {
-            if (e.getMessage().contains("Passenger with similar data already exists")) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .contentType(MediaType.APPLICATION_JSON)  // Définir explicitement le type de contenu
-                        .body(new ErrorResponse("Conflict", "Passenger with similar data already exists"));
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .contentType(MediaType.APPLICATION_JSON)  // Définir explicitement le type de contenu
-                        .body(new ErrorResponse("Internal server error", "Please try again later"));
-            }
+    public ResponseEntity<?> registerPassenger(@Valid @RequestBody PassengerDTO passengerDTO) {
+        if (passengerDTO.getPassword() == null || passengerDTO.getPassword().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse("Bad Request", "Password is required"));
         }
+        Passenger savedPassenger = passengerService.registerPassenger(passengerDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(savedPassenger);
     }
+
 
 
 

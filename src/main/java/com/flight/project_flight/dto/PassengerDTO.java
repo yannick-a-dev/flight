@@ -1,13 +1,15 @@
 package com.flight.project_flight.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
+@Data
 public class PassengerDTO {
     private Long id;
     private String firstName;
@@ -15,9 +17,13 @@ public class PassengerDTO {
     private String email;
     private String phone;
     private String passportNumber;
+    @NotBlank(message = "Password is required")
+    private String password;
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime dob;
     private List<AlertDto> alerts = new ArrayList<>();
+    @NotNull(message = "Enabled is required")
+    private Boolean enabled = false;
 
     public Long getId() {
         return id;
@@ -67,6 +73,14 @@ public class PassengerDTO {
         this.passportNumber = passportNumber;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public LocalDateTime getDob() {
         return dob;
     }
@@ -81,5 +95,13 @@ public class PassengerDTO {
 
     public void setAlerts(List<AlertDto> alerts) {
         this.alerts = alerts;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
     }
 }

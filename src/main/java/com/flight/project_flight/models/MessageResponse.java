@@ -1,5 +1,8 @@
 package com.flight.project_flight.models;
 
+import lombok.Data;
+
+@Data
 public class MessageResponse {
     private String message;
 
@@ -8,12 +11,10 @@ public class MessageResponse {
         this.message = message;
     }
 
-    // Getter
     public String getMessage() {
         return message;
     }
 
-    // Setter
     public void setMessage(String message) {
         this.message = message;
     }

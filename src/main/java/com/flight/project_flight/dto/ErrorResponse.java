@@ -2,9 +2,10 @@ package com.flight.project_flight.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 
+@Data
 public class ErrorResponse {
-
     private String error;
     private String message;
 
@@ -14,7 +15,6 @@ public class ErrorResponse {
         this.message = message;
     }
 
-    // Getters et setters
     public String getError() {
         return error;
     }

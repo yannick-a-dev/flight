@@ -2,6 +2,8 @@ package com.flight.project_flight.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -11,11 +13,12 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
+@Data
 @Table(name = "ticket")
 public class Ticket {
     @Id
     private String ticketNumber;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime issueDate;
     private BigDecimal price;
 

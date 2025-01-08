@@ -1,15 +1,13 @@
 package com.flight.project_flight.service;
 
+import com.flight.project_flight.dto.PassengerDTO;
 import com.flight.project_flight.exception.EmailAlreadyExistsException;
 import com.flight.project_flight.models.Passenger;
-import com.flight.project_flight.models.PassengerRequest;
-import com.flight.project_flight.models.PasswordHasher;
 import com.flight.project_flight.repository.PassengerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,9 +36,14 @@ public class PassengerService implements UserDetailsService {
         this.authService = authService;
         this.passwordEncoder = passwordEncoder;
     }
-
     public Passenger savePassenger(Passenger passenger) {
-        return passengerRepository.save(passenger);
+        if (passenger.getPassword() == null || passenger.getPassword().isEmpty()) {
+            String defaultPassword = "default_password";
+            String encodedPassword = passwordEncoder.encode(defaultPassword);
+            passenger.setPassword(encodedPassword);
+        }
+        passengerRepository.save(passenger);
+        return passenger;
     }
 
     public List<Passenger> getAllPassengers() {
@@ -70,43 +73,59 @@ public class PassengerService implements UserDetailsService {
         return false;
     }
     @Transactional
-    public Passenger registerPassenger(PassengerRequest passengerRequest) {
-        // Vérification si l'email existe déjà pour un passager différent de celui en cours (exclure l'ID actuel)
-        if (passengerRequest.getId() != null && passengerRepository.existsByEmailAndIdNot(passengerRequest.getEmail(), passengerRequest.getId())) {
-            throw new EmailAlreadyExistsException("Passenger with this email already exists");
-        } else if (passengerRequest.getId() == null && passengerRepository.existsByEmail(passengerRequest.getEmail())) {
-            // Si c'est une création, vérifier si l'email existe déjà
-            throw new EmailAlreadyExistsException("Passenger with this email already exists");
-        }
-
-        // Hachage du mot de passe
-        String hashedPassword = passwordEncoder.encode(passengerRequest.getPassword());
-
-        Passenger passenger = new Passenger(
-                null,
-                passengerRequest.getFirstName(),
-                passengerRequest.getLastName(),
-                passengerRequest.getEmail(),
-                hashedPassword,
-                passengerRequest.getPhone(),
-                passengerRequest.getPassportNumber(),
-                passengerRequest.getDob(),
-                null,
-                null
-        );
-
+    public Passenger registerPassenger(PassengerDTO passengerDTO) {
+        logger.debug("passengerDTO received: {}", passengerDTO);
+        checkEmailUniqueness(passengerDTO);
+        logger.debug("Raw password from request: {}", passengerDTO.getPassword());
+        String hashedPassword = encodePassword(passengerDTO.getPassword());
+        logger.debug("Hashed password: {}", hashedPassword);
+        Passenger passenger = createPassenger(passengerDTO, hashedPassword);
         logger.info("Passenger to be saved: {}", passenger);
-
-        // Si un passager existe avec cet ID, on met à jour les informations
-        if (passengerRequest.getId() != null) {
-            passenger.setId(passengerRequest.getId());
-        }
-
-        logger.info("Saving passenger: {}", passenger);
         Passenger savedPassenger = passengerRepository.save(passenger);
         logger.info("Passenger saved successfully: {}", savedPassenger);
         return savedPassenger;
     }
+
+
+    private void checkEmailUniqueness(PassengerDTO passengerDTO) {
+        if (passengerDTO.getId() != null && passengerRepository.existsByEmailAndIdNot(passengerDTO.getEmail(), passengerDTO.getId())) {
+            throw new EmailAlreadyExistsException("Passenger with this email already exists");
+        } else if (passengerDTO.getId() == null && passengerRepository.existsByEmail(passengerDTO.getEmail())) {
+            throw new EmailAlreadyExistsException("Passenger with this email already exists");
+        }
+    }
+    private String encodePassword(String password) {
+        if (password == null || password.isEmpty()) {
+            throw new RuntimeException("Password is null or empty");
+        }
+        logger.debug("Encoding password for user: {}", password);
+        String hashedPassword = passwordEncoder.encode(password);
+        if (hashedPassword == null || hashedPassword.isEmpty()) {
+            throw new RuntimeException("Password encoding failed");
+        }
+        return hashedPassword;
+    }
+
+
+    private Passenger createPassenger(PassengerDTO passengerDTO, String hashedPassword) {
+        Passenger passenger = new Passenger(
+                null,
+                passengerDTO.getFirstName(),
+                passengerDTO.getLastName(),
+                passengerDTO.getEmail(),
+                hashedPassword,
+                passengerDTO.getPhone(),
+                passengerDTO.getPassportNumber(),
+                passengerDTO.getDob()
+        );
+        if (passengerDTO.getEnabled() == null) {
+            passenger.setEnabled(true);
+        } else {
+            passenger.setEnabled(passengerDTO.getEnabled());
+        }
+        return passenger;
+    }
+
     @Override
     public UserDetails loadUserByUsername(String email) {
         Passenger userEntity = passengerRepository.findByEmail(email)

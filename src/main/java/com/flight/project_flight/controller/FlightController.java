@@ -58,7 +58,7 @@ public class FlightController {
         }
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{flightNumber}")
     public ResponseEntity<Void> deleteFlight(@PathVariable String flightNumber) {
         try {
             flightService.deleteFlight(flightNumber);

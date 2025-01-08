@@ -7,21 +7,30 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import com.flight.project_flight.enums.Severity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
+@Data
 @Table(name = "alert")
 public class Alert {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @NotBlank
     private String message;
 
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime alertDate;
+
+    @NotNull
     private Severity severity;
 
     @ManyToOne
@@ -38,6 +47,17 @@ public class Alert {
     @JoinColumn(name = "ticket_id")
     @JsonBackReference("ticket-alerts")
     private Ticket ticket;
+
+    public Alert() {}
+
+    public Alert(String message, LocalDateTime alertDate, Severity severity, Passenger passenger, Flight flight, Ticket ticket) {
+        this.message = message;
+        this.alertDate = alertDate;
+        this.severity = severity;
+        this.passenger = passenger;
+        this.flight = flight;
+        this.ticket = ticket;
+    }
 
     public Long getId() {
         return id;

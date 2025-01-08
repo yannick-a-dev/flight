@@ -1,15 +1,17 @@
 package com.flight.project_flight.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
+@Data
 public class ReservationDto {
     private Long id;
     @NotNull(message = "Reservation date cannot be null")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
+    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime reservationDate;
     private String seatNumber;
     private BigDecimal price;
