@@ -1,12 +1,10 @@
 package com.flight.project_flight.service;
 
 import com.flight.project_flight.dto.FlightDto;
-import com.flight.project_flight.exception.AirportNotFoundException;
 import com.flight.project_flight.exception.FlightNotFoundException;
 import com.flight.project_flight.exception.InvalidFlightDataException;
 import com.flight.project_flight.mapper.AlertMapper;
 import com.flight.project_flight.mapper.ReservationMapper;
-import com.flight.project_flight.models.Airport;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.repository.AirportRepository;
 import com.flight.project_flight.repository.FlightRepository;
@@ -46,14 +44,8 @@ public class FlightService {
         flight.setDepartureTime(flightDto.getDepartureTime());
         flight.setArrivalTime(flightDto.getArrivalTime());
 
-        // Convertir les AirportDto en objets Airport
-        Airport departureAirport = airportRepository.findByCode(flightDto.getDepartureAirport().getCode())
-                .orElseThrow(() -> new IllegalArgumentException("Departure airport not found."));
-        Airport arrivalAirport = airportRepository.findByCode(flightDto.getArrivalAirport().getCode())
-                .orElseThrow(() -> new IllegalArgumentException("Arrival airport not found."));
-
-        flight.setDepartureAirport(departureAirport);
-        flight.setArrivalAirport(arrivalAirport);
+        flight.setDepartureAirport(flightDto.getDepartureAirport());
+        flight.setArrivalAirport(flightDto.getArrivalAirport());
 
         // Définir le statut du vol
         flight.setStatus(flightDto.getStatus());
@@ -96,15 +88,8 @@ public class FlightService {
         existingFlight.setDepartureTime(flightDto.getDepartureTime());
         existingFlight.setArrivalTime(flightDto.getArrivalTime());
 
-        // Convert AirportDTO to Airport entity using the airportRepository
-        Airport departureAirport = airportRepository.findByCode(flightDto.getDepartureAirport().getCode())
-                .orElseThrow(() -> new AirportNotFoundException(flightDto.getDepartureAirport().getCode()));
-        Airport arrivalAirport = airportRepository.findByCode(flightDto.getArrivalAirport().getCode())
-                .orElseThrow(() -> new AirportNotFoundException(flightDto.getArrivalAirport().getCode()));
-
-        existingFlight.setDepartureAirport(departureAirport);
-        existingFlight.setArrivalAirport(arrivalAirport);
-
+        existingFlight.setDepartureAirport(flightDto.getDepartureAirport());
+        existingFlight.setArrivalAirport(flightDto.getArrivalAirport());
         // Update other fields
         existingFlight.setStatus(flightDto.getStatus());
         existingFlight.setReservations(reservationMapper.mapToReservations(flightDto.getReservations(), existingFlight));
