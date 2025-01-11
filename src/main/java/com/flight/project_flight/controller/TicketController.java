@@ -42,13 +42,11 @@ public class TicketController {
         // Check if the ticket with the provided ticketNumber exists
         if (ticketService.existsByTicketNumber(ticketNumber)) {
             ticketService.deleteTicket(ticketNumber);
-            return ResponseEntity.noContent().build();  // Successfully deleted, return 204 No Content
+            return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.notFound().build();  // Ticket not found, return 404 Not Found
+            return ResponseEntity.notFound().build();
         }
     }
-
-
     @GetMapping("/passenger/{passengerId}")
     public ResponseEntity<List<Ticket>> getTicketsByPassenger(@PathVariable Long passengerId) {
         try {

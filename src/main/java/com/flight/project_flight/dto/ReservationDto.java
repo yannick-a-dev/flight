@@ -3,11 +3,10 @@ package com.flight.project_flight.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-@Data
+
 public class ReservationDto {
     private Long id;
     @NotNull(message = "Reservation date cannot be null")

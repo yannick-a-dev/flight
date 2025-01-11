@@ -2,10 +2,9 @@ package com.flight.project_flight.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
-import lombok.Data;
 
 import java.time.LocalDateTime;
-@Data
+
 public class AlertDto {
     private String message;
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)

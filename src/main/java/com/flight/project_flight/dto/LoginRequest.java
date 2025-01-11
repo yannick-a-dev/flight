@@ -1,9 +1,7 @@
 package com.flight.project_flight.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
 
-@Data
 public class LoginRequest {
     @NotBlank(message = "Username is mandatory")
     private String username;

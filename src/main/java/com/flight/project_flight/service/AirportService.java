@@ -21,7 +21,6 @@ public class AirportService {
 
     // Récupérer tous les aéroports
     public List<AirportDTO> getAllAirports() {
-        // Récupération des aéroports et conversion en DTO
         List<Airport> airports = airportRepository.findAll();
         return airports.stream()
                 .map(airport -> new AirportDTO(airport))
@@ -52,6 +51,13 @@ public class AirportService {
         airport.setName(airportDetails.getName());
         airport.setLocation(airportDetails.getLocation());
         airport.setCode(airportDetails.getCode());
+        airport.setCapacity(airportDetails.getCapacity());
+        airport.setCity(airportDetails.getCity());
+        airport.setCountry(airportDetails.getCountry());
+        airport.setInternational(airportDetails.getInternational());
+        airport.setActive(airportDetails.getActive());
+        airport.setTerminalInfo(airportDetails.getTerminalInfo());
+        airport.setTimezone(airportDetails.getTimezone());
         return airportRepository.save(airport);
     }
 

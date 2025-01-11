@@ -1,49 +1,87 @@
 package com.flight.project_flight.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
-
-import java.util.ArrayList;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
 @Table(name = "airport")
 public class Airport {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @NotBlank(message = "Name is mandatory")
     private String name;
+
+    @NotBlank(message = "Location is mandatory")
     private String location;
+
+    @NotBlank(message = "Code is mandatory")
     private String code;
 
+    @NotNull
+    @Min(value = 0, message = "Capacity must be positive")
+    @Column(nullable = false)
+    private Integer capacity = 0;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String city = "Unknown";
+
+    @NotBlank
+    @Column(nullable = false)
+    private String country = "Unknown";
+
+    @NotNull
+    @Column(nullable = false)
+    private Boolean international = false;
+
+    @NotNull
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = false;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String terminalInfo = "No information available";
+
+    @NotBlank
+    @Column(nullable = false)
+    private String timezone = "Unknown";
+
+    @JsonIgnore
     @OneToMany(mappedBy = "departureAirport", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Flight> departureFlights = new HashSet<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "arrivalAirport", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Flight> arrivalFlights = new HashSet<>();
 
+    // Constructeur par défaut
     public Airport() {
-
     }
 
-    public Airport(Long id, String name, String location, String code, Set<Flight> departureFlights, Set<Flight> arrivalFlights) {
+    // Constructeur avec paramètres
+    public Airport(Long id, String name, String location, String code, Integer capacity, String city, String country, Boolean international, Boolean isActive, String terminalInfo, String timezone) {
         this.id = id;
         this.name = name;
         this.location = location;
         this.code = code;
-        this.departureFlights = departureFlights;
-        this.arrivalFlights = arrivalFlights;
+        this.capacity = capacity != null ? capacity : 0;
+        this.city = city != null ? city : "Unknown";
+        this.country = country != null ? country : "Unknown";
+        this.international = international != null ? international : false;
+        this.isActive = isActive != null ? isActive : false;
+        this.terminalInfo = terminalInfo != null ? terminalInfo : "No information available";
+        this.timezone = timezone != null ? timezone : "Unknown";
     }
 
-    public Airport(Long id, String code, String location, String name) {
-        this.id = id;
-        this.name = name;
-        this.location = location;
-        this.code = code;
-    }
-
+    // Getters et Setters
     public Long getId() {
         return id;
     }
@@ -74,6 +112,62 @@ public class Airport {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Boolean getInternational() {
+        return international;
+    }
+
+    public void setInternational(Boolean international) {
+        this.international = international;
+    }
+
+    public Boolean getActive() {
+        return isActive;
+    }
+
+    public void setActive(Boolean active) {
+        isActive = active;
+    }
+
+    public String getTerminalInfo() {
+        return terminalInfo;
+    }
+
+    public void setTerminalInfo(String terminalInfo) {
+        this.terminalInfo = terminalInfo;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 
     public Set<Flight> getDepartureFlights() {

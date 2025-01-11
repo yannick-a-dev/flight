@@ -76,40 +76,30 @@ public class PassengerController {
     public ResponseEntity<?> updatePassenger(@PathVariable Long id, @RequestBody PassengerDTO passengerDTO) {
         return passengerService.getPassengerById(id)
                 .map(existingPassenger -> {
-                    // Mettre à jour les propriétés du passager
                     updatePassengerDetails(existingPassenger, passengerDTO);
-
-                    // Vérifier si le mot de passe est fourni
                     if (passengerDTO.getPassword() != null && !passengerDTO.getPassword().isEmpty()) {
                         // Encoder le mot de passe avant de le stocker
                         String encodedPassword = passwordEncoder.encode(passengerDTO.getPassword());
                         existingPassenger.setPassword(encodedPassword);
-                        System.out.println("Mot de passe encodé : " + encodedPassword);  // Log du mot de passe encodé
+                        System.out.println("Mot de passe encodé : " + encodedPassword);
                     }
-
-                    // Appliquer l'encodage si nécessaire
                     if (existingPassenger.getPassword() == null || existingPassenger.getPassword().isEmpty()) {
-                        existingPassenger.setPassword("default_password");  // Appliquer un mot de passe par défaut si nécessaire
-                        System.out.println("Mot de passe par défaut appliqué");  // Log pour le mot de passe par défaut
+                        existingPassenger.setPassword("default_password");
+                        System.out.println("Mot de passe par défaut appliqué");
                     }
-
-                    // Mettre à jour les alertes, tout en gérant les potentiels cas d'absence de vol ou d'alertes nulles
                     try {
                         List<Alert> updatedAlerts = updatePassengerAlerts(existingPassenger, passengerDTO);
                         existingPassenger.setAlerts(updatedAlerts);
                     } catch (RuntimeException e) {
                         // Renvoie une réponse avec une erreur sans corps
-                        return ResponseEntity.badRequest().build(); // Gérer l'absence de vol lié au passager
+                        return ResponseEntity.badRequest().build();
                     }
-
-                    // Sauvegarder le passager mis à jour
                     Passenger updatedPassenger = passengerService.savePassenger(existingPassenger);
                     return ResponseEntity.ok(updatedPassenger);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Méthode pour mettre à jour les détails du passager
     private void updatePassengerDetails(Passenger passenger, PassengerDTO passengerDTO) {
         passenger.setFirstName(passengerDTO.getFirstName());
         passenger.setLastName(passengerDTO.getLastName());
@@ -119,19 +109,15 @@ public class PassengerController {
         passenger.setDob(passengerDTO.getDob());
     }
 
-    // Méthode pour mettre à jour les alertes du passager
     private List<Alert> updatePassengerAlerts(Passenger passenger, PassengerDTO passengerDTO) {
         return Optional.ofNullable(passengerDTO.getAlerts())
-                .orElse(Collections.emptyList()) // Initialiser une liste vide si aucune alerte n'est fournie
+                .orElse(Collections.emptyList())
                 .stream()
                 .map(alertDto -> {
-                    // Trouver le premier vol lié au passager via ses réservations
                     Flight flight = passenger.getReservations().stream()
                             .map(Reservation::getFlight)
-                            .findFirst() // Supposant qu'un passager est lié à au moins un vol
+                            .findFirst()
                             .orElseThrow(() -> new RuntimeException("No flight associated with passenger"));
-
-                    // Convertir le DTO en entité et sauvegarder l'alerte
                     Alert alert = alertConverter.convertToEntity(alertDto, passenger, flight);
                     return alertService.saveAlert(alert);
                 })
@@ -143,9 +129,9 @@ public class PassengerController {
         boolean isDeleted = passengerService.deletePassengerById(id);
 
         if (isDeleted) {
-            return ResponseEntity.noContent().build(); // Code 204 : La ressource a été supprimée avec succès
+            return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.notFound().build(); // Code 404 : Le passager n'a pas été trouvé
+            return ResponseEntity.notFound().build();
         }
     }
 
