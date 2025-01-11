@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,13 +18,15 @@ public class Airport {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name is mandatory")
+    @NotNull(message = "Name is mandatory")
     private String name;
 
-    @NotBlank(message = "Location is mandatory")
+    @NotNull(message = "Location is mandatory")
+    @Size(min = 1, message = "Location must not be empty")
     private String location;
 
-    @NotBlank(message = "Code is mandatory")
+    @NotNull(message = "Code is mandatory")
+    @Size(min = 1, message = "Code must not be empty")
     private String code;
 
     @NotNull
@@ -30,11 +34,11 @@ public class Airport {
     @Column(nullable = false)
     private Integer capacity = 0;
 
-    @NotBlank
+    @NotNull
     @Column(nullable = false)
     private String city = "Unknown";
 
-    @NotBlank
+    @NotNull
     @Column(nullable = false)
     private String country = "Unknown";
 
@@ -46,11 +50,11 @@ public class Airport {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = false;
 
-    @NotBlank
+    @NotNull
     @Column(nullable = false)
     private String terminalInfo = "No information available";
 
-    @NotBlank
+    @NotNull
     @Column(nullable = false)
     private String timezone = "Unknown";
 
