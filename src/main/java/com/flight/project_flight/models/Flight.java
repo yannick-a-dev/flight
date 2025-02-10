@@ -7,6 +7,7 @@ import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import com.flight.project_flight.enums.FlightStatus;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -32,6 +33,7 @@ public class Flight {
 
     @OneToMany(mappedBy = "flight")
     @JsonBackReference
+    @ToString.Exclude
     private List<Alert> alerts;
 
     public String getFlightNumber() {

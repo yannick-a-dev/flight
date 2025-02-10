@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "AlertEvent",
+  "namespace": "com.flight.project_flight.event",
+  "fields":[
+    {"name": "passwordNumber", "type": "string"},
+    {"name": "email", "type": "string"},
+    {"name": "firstName", "type": "string"},
+    {"name": "lastName", "type": "string"}
+  ]
+}

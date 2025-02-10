@@ -1,9 +1,9 @@
 server:
-  port: 8081
+  port: 8082
 
 spring:
   application:
-    name: flight-management-service # Nom de l'application
+    name: flight-management-service
 
   datasource:
     url: jdbc:mysql://localhost:3306/flights?useUnicode=true&characterEncoding=UTF-8
@@ -24,27 +24,26 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
 
-kafka:
-  bootstrap-servers: localhost:9092
-  consumer:
-    group-id: flight-service-group
-    auto-offset-reset: earliest
-    enable-auto-commit: false
-    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-  producer:
-    client-id: flight-management-service-producer
-    retries: 5
-    acks: all
-    retry-backoff-ms: 100
-    key-serializer: org.apache.kafka.common.serialization.StringSerializer
-    value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-  template:
-    default-topic: flights-topic
-  topic:
-    flight-events: flights-topic
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      client-id: flight-management-service-producer
+      retries: 5
+      acks: all
+      retry-backoff-ms: 100
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        max.request.size: 200000000
+        schema.registry.url: http://localhost:8086
+        request.timeout.ms: 120000
+        metadata.fetch.timeout.ms: 120000
 
+    template:
+      default-topic: event-placed
 
+    topic:
+      flight-events: event-placed
 
 springdoc:
   api-docs:
@@ -67,16 +66,16 @@ cors:
 logging:
   level:
     root: INFO
-    org.springframework.kafka: DEBUG # Niveau de log pour Kafka
+    org.springframework.kafka: DEBUG
 
 management:
   endpoints:
     web:
       exposure:
-        include: "*" # Expose tous les endpoints pour l'administration
+        include: "*"
   endpoint:
     health:
-      show-details: always # Affiche les détails sur les points de santé
+      show-details: always
 
 
 

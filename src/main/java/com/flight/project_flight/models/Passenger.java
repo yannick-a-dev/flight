@@ -47,10 +47,12 @@ public class Passenger implements UserDetails {
     private LocalDateTime dob;
 
     @OneToMany(mappedBy = "passenger")
+    @ToString.Exclude
     private List<Reservation> reservations;
 
     @OneToMany(mappedBy = "passenger")
     @JsonBackReference
+    @ToString.Exclude
     private List<Alert> alerts;
 
     @NotBlank(message = "Password is required")
@@ -67,6 +69,21 @@ public class Passenger implements UserDetails {
     )
     @JsonIdentityReference(alwaysAsId = true)
     private List<Role> roles = new ArrayList<>();
+
+
+    @Override
+    public String toString() {
+        return "Passenger{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", phone='" + phone + '\'' +
+                ", passportNumber='" + passportNumber + '\'' +
+                ", password='" + password + '\'' +
+                ", enabled=" + enabled +
+                '}';
+    }
 
     public Passenger(Long id, String firstName, String lastName, String email, String hashedPassword, String phone, String passportNumber, LocalDateTime dob) {
         this.id = id;
@@ -102,7 +119,6 @@ public class Passenger implements UserDetails {
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
     }
-
     @Override
     public String getUsername() {
         return email;

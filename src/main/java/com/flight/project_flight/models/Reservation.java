@@ -1,6 +1,7 @@
 package com.flight.project_flight.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import jakarta.persistence.*;
@@ -24,6 +25,7 @@ public class Reservation {
 
     @ManyToOne
     @JoinColumn(name = "passenger_id")
+    @JsonManagedReference
     private Passenger passenger;
 
     @ManyToOne

@@ -38,39 +38,51 @@ public class AlertController {
 
     @PostMapping
     public ResponseEntity<Alert> createAlert(@RequestBody AlertDto alertDto) {
+        log.debug("Received request to create alert: {}", alertDto);
+
         // Vérification des champs obligatoires
         if (alertDto.getPassengerId() == null || alertDto.getFlightNumber() == null) {
-            log.error("PassengerId or FlightId is missing in the request body.");
+            log.error("PassengerId or FlightNumber is missing in the request body: {}", alertDto);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
+        log.info("Request contains valid PassengerId: {} and FlightNumber: {}", alertDto.getPassengerId(), alertDto.getFlightNumber());
 
         // Recherche du passager
+        log.debug("Searching for passenger with ID: {}", alertDto.getPassengerId());
         Passenger passenger = passengerService.findById(alertDto.getPassengerId());
         if (passenger == null) {
-            log.error("Passenger not found with ID: " + alertDto.getPassengerId());
+            log.error("Passenger not found with ID: {}", alertDto.getPassengerId());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+        log.info("Passenger found: {}", passenger);
 
-        // Recherche du vol, gestion de l'Optional
+        // Recherche du vol
+        log.debug("Searching for flight with Flight Number: {}", alertDto.getFlightNumber());
         Optional<Flight> flightOptional = flightService.findByFlightNumber(alertDto.getFlightNumber());
         Flight flight = flightOptional.orElseThrow(() -> {
-            log.error("Flight not found with Flight Number: " + alertDto.getFlightNumber());
+            log.error("Flight not found with Flight Number: {}", alertDto.getFlightNumber());
             return new FlightNotFoundException(alertDto.getFlightNumber());
         });
+        log.info("Flight found: {}", flight);
 
-        // Conversion de severity en enum Severity
+        // Conversion de severity
+        log.debug("Converting severity value: {}", alertDto.getSeverity());
         Severity severity;
         try {
             severity = Severity.valueOf(alertDto.getSeverity().toUpperCase());
+            log.info("Severity value converted successfully: {}", severity);
         } catch (IllegalArgumentException e) {
-            log.error("Invalid severity value: " + alertDto.getSeverity());
+            log.error("Invalid severity value: {}", alertDto.getSeverity(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        // Si la date d'alerte est null, on l'initialise à la date actuelle
+        // Gestion de la date d'alerte
         LocalDateTime alertDate = alertDto.getAlertDate() != null ? alertDto.getAlertDate() : LocalDateTime.now();
+        log.debug("Alert date set to: {}", alertDate);
 
         // Création de l'alerte
+        log.debug("Creating alert for Passenger ID: {}, Flight Number: {}, Message: {}, Severity: {}, Alert Date: {}",
+                alertDto.getPassengerId(), alertDto.getFlightNumber(), alertDto.getMessage(), severity, alertDate);
         Alert alert = flightAlertService.createAlertForFlight(
                 alertDto.getPassengerId(),
                 alertDto.getFlightNumber(),
@@ -79,15 +91,18 @@ public class AlertController {
                 alertDate
         );
 
-        // Gestion d'une erreur lors de la création de l'alerte
+        // Vérification du résultat de la création de l'alerte
         if (alert == null) {
-            log.error("Failed to create alert for Passenger ID: " + alertDto.getPassengerId() + " and Flight Number: " + alertDto.getFlightNumber());
+            log.error("Failed to create alert for Passenger ID: {} and Flight Number: {}", alertDto.getPassengerId(), alertDto.getFlightNumber());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+        log.info("Alert created successfully: {}", alert);
 
-        // Retour de l'alerte créée avec le statut CREATED
+        // Retour de la réponse avec le statut CREATED
+        log.debug("Returning created alert with status CREATED.");
         return ResponseEntity.status(HttpStatus.CREATED).body(alert);
     }
+
 
 
     // Récupérer toutes les alertes

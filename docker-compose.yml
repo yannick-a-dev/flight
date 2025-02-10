@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # MySQL Flight Database
   mysql-flight:
@@ -27,7 +29,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://flight-db:3306/flights?useUnicode=true&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: broker:29092
     depends_on:
       - mysql-flight
       - broker
@@ -61,6 +63,16 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_MESSAGE_MAX_BYTES: 200000000
+      KAFKA_REPLICA_FETCH_MAX_BYTES: 200000000
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 200000000
+
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "localhost:9092"]
+      retries: 5
+      interval: 10s
+      start_period: 30s
+      timeout: 10s
     networks:
       - flight-network
 
@@ -72,10 +84,10 @@ services:
     depends_on:
       - broker
     ports:
-      - "8082:8081"
+      - "8086:8081"
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker:29092'
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'PLAINTEXT://broker:29092'
       SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
     networks:
       - flight-network
@@ -104,4 +116,4 @@ volumes:
 # Network definition
 networks:
   flight-network:
-
+    driver: bridge
