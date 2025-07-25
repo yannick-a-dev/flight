@@ -51,7 +51,6 @@ public class Passenger implements UserDetails {
     private List<Reservation> reservations;
 
     @OneToMany(mappedBy = "passenger")
-    @JsonBackReference
     @ToString.Exclude
     private List<Alert> alerts;
 

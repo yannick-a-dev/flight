@@ -1,8 +1,6 @@
 package com.flight.project_flight.models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import com.flight.project_flight.enums.Severity;
@@ -20,6 +18,7 @@ import java.util.Date;
 @Entity
 @Data
 @Table(name = "alert")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Alert {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,21 +33,18 @@ public class Alert {
     @NotNull
     private Severity severity;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "passenger_id")
-    @JsonBackReference("alert-passenger")
     @ToString.Exclude
     private Passenger passenger;
 
     @ManyToOne
     @JoinColumn(name = "flight_id")
-    @JsonBackReference("alert-flight")
     @ToString.Exclude
     private Flight flight;
 
     @ManyToOne
     @JoinColumn(name = "ticket_id")
-    @JsonBackReference("ticket-alerts")
     @ToString.Exclude
     private Ticket ticket;
 

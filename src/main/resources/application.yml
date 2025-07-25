@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8081
 
 spring:
   application:
@@ -31,11 +31,11 @@ spring:
       retries: 5
       acks: all
       retry-backoff-ms: 100
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      key-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       properties:
         max.request.size: 200000000
-        schema.registry.url: http://localhost:8086
+        schema.registry.url: http://schema-registry:8091
         request.timeout.ms: 120000
         metadata.fetch.timeout.ms: 120000
 

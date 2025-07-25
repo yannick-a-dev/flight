@@ -2,6 +2,8 @@ package com.flight.project_flight.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import com.flight.project_flight.enums.FlightStatus;
@@ -16,6 +18,7 @@ import java.util.List;
 @Entity
 @Data
 @Table(name = "flight")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "flightNumber")
 public class Flight {
     @Id
     private String flightNumber;
@@ -28,11 +31,11 @@ public class Flight {
     @Enumerated(EnumType.STRING)
     private FlightStatus status;
 
-    @OneToMany(mappedBy = "flight")
+    @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL)
+    @ToString.Exclude
     private List<Reservation> reservations;
 
-    @OneToMany(mappedBy = "flight")
-    @JsonBackReference
+    @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<Alert> alerts;
 

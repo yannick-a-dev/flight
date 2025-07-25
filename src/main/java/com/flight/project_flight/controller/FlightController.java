@@ -1,8 +1,10 @@
 package com.flight.project_flight.controller;
 
 import com.flight.project_flight.dto.FlightDto;
+import com.flight.project_flight.dto.FlightResponseDto;
 import com.flight.project_flight.exception.FlightNotFoundException;
 import com.flight.project_flight.exception.InvalidFlightDataException;
+import com.flight.project_flight.mapper.FlightMapper;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.service.FlightService;
 import jakarta.validation.Valid;
@@ -19,9 +21,11 @@ import java.util.stream.Collectors;
 public class FlightController {
 
     private final FlightService flightService;
+    private final FlightMapper flightMapper;
 
-    public FlightController(FlightService flightService) {
+    public FlightController(FlightService flightService, FlightMapper flightMapper) {
         this.flightService = flightService;
+        this.flightMapper = flightMapper;
     }
 
     @PostMapping
@@ -32,19 +36,31 @@ public class FlightController {
                     .collect(Collectors.toList());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
         }
+
         Flight createdFlight = flightService.createFlight(flightDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdFlight);
+
+        // ✅ Appel du mapper pour créer un DTO propre
+        FlightResponseDto responseDto = flightMapper.toResponseDto(createdFlight);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
+
     @GetMapping
-    public ResponseEntity<List<Flight>> getAllFlights() {
+    public ResponseEntity<List<FlightResponseDto>> getAllFlights() {
         List<Flight> flights = flightService.getAllFlights();
 
         if (flights.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(flights);
+
+        List<FlightResponseDto> dtos = flights.stream()
+                .map(flightMapper::toResponseDto)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
     }
+
 
     @PutMapping("/{flightNumber}")
     public ResponseEntity<Flight> updateFlight(@PathVariable String flightNumber, @RequestBody FlightDto flightDto) {

@@ -143,9 +143,9 @@ public class PassengerController {
         boolean isDeleted = passengerService.deletePassengerById(id);
 
         if (isDeleted) {
-            return ResponseEntity.noContent().build(); // Code 204 : La ressource a été supprimée avec succès
+            return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.notFound().build(); // Code 404 : Le passager n'a pas été trouvé
+            return ResponseEntity.notFound().build();
         }
     }
 

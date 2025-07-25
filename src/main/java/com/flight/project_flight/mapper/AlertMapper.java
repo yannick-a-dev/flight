@@ -5,6 +5,7 @@ import com.flight.project_flight.enums.Severity;
 import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Passenger;
+import com.flight.project_flight.repository.PassengerRepository;
 import com.flight.project_flight.service.PassengerService;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +16,11 @@ import java.util.stream.Collectors;
 public class AlertMapper {
 
     private final PassengerService passengerService;
+    private final PassengerRepository passengerRepository;
 
-    public AlertMapper(PassengerService passengerService) {
+    public AlertMapper(PassengerService passengerService, PassengerRepository passengerRepository) {
         this.passengerService = passengerService;
+        this.passengerRepository = passengerRepository;
     }
 
     public Alert toEntity(AlertDto alertDto) {
@@ -44,9 +47,16 @@ public class AlertMapper {
                 .map(dto -> {
                     Alert alert = new Alert();
                     alert.setMessage(dto.getMessage());
+                    alert.setAlertDate(dto.getAlertDate());
                     Severity severity = Severity.valueOf(dto.getSeverity());
                     alert.setSeverity(severity);
                     alert.setFlight(flight);
+                    if (dto.getPassengerId() != null) {
+                        Passenger passenger = passengerRepository.findById(dto.getPassengerId())
+                                .orElseThrow(() -> new RuntimeException("Passenger not found with ID: " + dto.getPassengerId()));
+                        alert.setPassenger(passenger);
+                    }
+
                     return alert;
                 })
                 .collect(Collectors.toList());

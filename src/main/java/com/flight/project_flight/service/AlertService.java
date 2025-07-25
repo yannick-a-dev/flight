@@ -21,8 +21,8 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
@@ -34,12 +34,16 @@ public class AlertService {
     private static final Schema SCHEMA;
 
     static {
-        try {
-            SCHEMA = new Schema.Parser().parse(new File("src/main/resources/avro/event-placed.avsc"));
+        try (InputStream inputStream = AlertService.class.getClassLoader().getResourceAsStream("avro/event-placed.avsc")) {
+            if (inputStream == null) {
+                throw new RuntimeException("Schema file not found!");
+            }
+            SCHEMA = new Schema.Parser().parse(inputStream);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error parsing Avro schema", e);
         }
     }
+
 
     private static final String PASSWORD_NUMBER_FIELD = "passwordNumber";
     private static final String EMAIL_FIELD = "email";
@@ -102,26 +106,29 @@ public class AlertService {
         }
     }
 
-    private GenericRecord createAvroRecord(AlertEvent alertEvent) {
+    public GenericRecord createAvroRecord(AlertEvent alertEvent) {
         GenericRecord record = new GenericData.Record(SCHEMA);
-        fillRecordWithAlertEvent(record, alertEvent);
+        record.put("passwordNumber", alertEvent.getPasswordNumber());
+        record.put("email", alertEvent.getEmail());
+        record.put("firstName", alertEvent.getFirstName());
+        record.put("lastName", alertEvent.getLastName());
         return record;
     }
 
-    private void fillRecordWithAlertEvent(GenericRecord record, AlertEvent alertEvent) {
-        record.put(EMAIL_FIELD, Optional.ofNullable(alertEvent.getEmail()).orElse(""));
-        record.put(PASSWORD_NUMBER_FIELD, Optional.ofNullable(alertEvent.getPasswordNumber()).orElse(""));
-        record.put(FIRST_NAME_FIELD, Optional.ofNullable(alertEvent.getFirstName()).orElse(""));
-        record.put(LAST_NAME_FIELD, Optional.ofNullable(alertEvent.getLastName()).orElse(""));
-    }
-
-    private String safeToString(Object value) {
-        if (value == null) {
-            log.warn("Null value encountered for field. Returning 'N/A'.");
-            return "N/A";
-        }
-        return value.toString();
-    }
+//    private void fillRecordWithAlertEvent(GenericRecord record, AlertEvent alertEvent) {
+//        record.put(EMAIL_FIELD, Optional.ofNullable(alertEvent.getEmail()).orElse(""));
+//        record.put(PASSWORD_NUMBER_FIELD, Optional.ofNullable(alertEvent.getPasswordNumber()).orElse(""));
+//        record.put(FIRST_NAME_FIELD, Optional.ofNullable(alertEvent.getFirstName()).orElse(""));
+//        record.put(LAST_NAME_FIELD, Optional.ofNullable(alertEvent.getLastName()).orElse(""));
+//    }
+//
+//    private String safeToString(Object value) {
+//        if (value == null) {
+//            log.warn("Null value encountered for field. Returning 'N/A'.");
+//            return "N/A";
+//        }
+//        return value.toString();
+//    }
 
     private void validateInputs(Passenger passenger, Flight flight, LocalDateTime alertDate, String message, String severity) {
         if (passenger == null || flight == null || alertDate == null || message == null || severity == null) {

@@ -1,7 +1,9 @@
 package com.flight.project_flight.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import jakarta.persistence.*;
@@ -15,6 +17,7 @@ import java.util.List;
 @Entity
 @Data
 @Table(name = "ticket")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "ticketNumber")
 public class Ticket {
     @Id
     private String ticketNumber;
@@ -30,7 +33,6 @@ public class Ticket {
     @JoinColumn(name = "flight_id")
     private Flight flight;
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference("ticket-alerts")
     private List<Alert> alerts;
 
     public String getTicketNumber() {

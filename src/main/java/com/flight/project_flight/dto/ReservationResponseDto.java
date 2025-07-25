@@ -1,23 +1,13 @@
 package com.flight.project_flight.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
-import jakarta.validation.constraints.NotNull;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public class ReservationDto {
+public class ReservationResponseDto {
     private Long id;
-    @NotNull(message = "Reservation date cannot be null")
-    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime reservationDate;
     private String seatNumber;
-    private BigDecimal price;
-    @NotNull(message = "Passenger ID cannot be null")
+    private Double price;
     private Long passengerId;
-    @NotNull(message = "Flight ID cannot be null")
-    private String flightNumber;
 
     public Long getId() {
         return id;
@@ -43,11 +33,11 @@ public class ReservationDto {
         this.seatNumber = seatNumber;
     }
 
-    public BigDecimal getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(BigDecimal price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 
@@ -57,13 +47,5 @@ public class ReservationDto {
 
     public void setPassengerId(Long passengerId) {
         this.passengerId = passengerId;
-    }
-
-    public String getFlightNumber() {
-        return flightNumber;
-    }
-
-    public void setFlightNumber(String flightNumber) {
-        this.flightNumber = flightNumber;
     }
 }
