@@ -45,14 +45,9 @@ public class FlightController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
-
     @GetMapping
     public ResponseEntity<List<FlightResponseDto>> getAllFlights() {
         List<Flight> flights = flightService.getAllFlights();
-
-        if (flights.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
 
         List<FlightResponseDto> dtos = flights.stream()
                 .map(flightMapper::toResponseDto)
@@ -60,7 +55,6 @@ public class FlightController {
 
         return ResponseEntity.ok(dtos);
     }
-
 
     @PutMapping("/{flightNumber}")
     public ResponseEntity<Flight> updateFlight(@PathVariable String flightNumber, @RequestBody FlightDto flightDto) {

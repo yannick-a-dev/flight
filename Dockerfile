@@ -1,36 +1,32 @@
-# Étape 1 : Build de l'application
-FROM openjdk:17-jdk-slim AS build
+# Étape 1 : Build de l'application avec Maven
+FROM maven:3.9.3-eclipse-temurin-17 AS build
 
-# Installer Maven et nettoyer les caches
-RUN apt-get update && apt-get install -y maven && apt-get clean
-
-# Définir le répertoire de travail dans l'image
 WORKDIR /app
 
-# Copier le pom.xml, mvnw et le dossier .mvn
+# Copier uniquement le pom.xml et .mvn pour tirer parti du cache Docker
 COPY pom.xml ./
 COPY .mvn .mvn/
 
-# Résoudre les dépendances
-RUN mvn dependency:resolve
+# Créer un dossier pour le cache Maven
+RUN mkdir -p /root/.m2
+
+# Télécharger les dépendances avec retry et timeout pour fiabilité
+RUN mvn -B dependency:resolve -Dmaven.wagon.http.retryHandler.count=5 -Dmaven.wagon.httpconnectionManager.ttlSeconds=30 || true
 
 # Copier le code source
 COPY src ./src
 
-# Construire le package
-RUN mvn package -DskipTests
+# Build du projet sans tests
+RUN mvn -B package -DskipTests
 
-# Étape 2 : Créer l'image finale avec JDK Alpine
-FROM openjdk:17-jdk-slim
+# Étape 2 : Image finale
+FROM eclipse-temurin:17-jdk-jammy
 
-# Définir le répertoire de travail dans l'image
 WORKDIR /app
 
-# Copier le fichier JAR généré depuis l'étape précédente
+# Copier le JAR généré
 COPY --from=build /app/target/*.jar app.jar
 
-# Exposer le port
 EXPOSE 8080
 
-# Exécuter l'application
 ENTRYPOINT ["java", "-jar", "app.jar"]

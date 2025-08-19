@@ -6,7 +6,7 @@ services:
     image: mysql:8.0
     container_name: flight-db
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root-password
       MYSQL_DATABASE: flights
@@ -26,13 +26,15 @@ services:
     ports:
       - "8083:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://flight-db:3306/flights?useUnicode=true&characterEncoding=UTF-8
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-flight:3306/flights?useUnicode=true&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: broker:29092
     depends_on:
       - mysql-flight
       - broker
+    volumes:
+      - maven_repo:/root/.m2
     networks:
       - flight-network
 
@@ -63,11 +65,9 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
       KAFKA_MESSAGE_MAX_BYTES: 512000000
       KAFKA_REPLICA_FETCH_MAX_BYTES: 512000000
       KAFKA_SOCKET_REQUEST_MAX_BYTES: 512000000
-
     healthcheck:
       test: ["CMD", "curl", "--silent", "--fail", "localhost:9092"]
       retries: 5
@@ -96,7 +96,7 @@ services:
     networks:
       - flight-network
 
-  # Kafka UI for monitoring and managing Kafka
+  # Kafka UI
   kafka-ui:
     container_name: kafka-ui
     image: provectuslabs/kafka-ui:latest
@@ -113,11 +113,22 @@ services:
     networks:
       - flight-network
 
-# Volume definition
+  # Mailhog
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Interface Web
+    networks:
+      - flight-network
+
+# Volumes
 volumes:
   db_data:
+  maven_repo:
 
-# Network definition
+# Network
 networks:
   flight-network:
     driver: bridge

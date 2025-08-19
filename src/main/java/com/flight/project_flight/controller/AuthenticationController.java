@@ -4,6 +4,8 @@ import com.flight.project_flight.config.JwtService;
 import com.flight.project_flight.dto.*;
 import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.service.AuthService;
+import com.flight.project_flight.service.EmailService;
+import com.flight.project_flight.service.OtpService;
 import com.flight.project_flight.service.PassengerService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -15,52 +17,78 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
 
     Logger logger = LoggerFactory.getLogger(getClass());
-    @Autowired
-    @Lazy
-    private AuthService authService;
+    private final AuthService authService;
     private final JwtService jwtService;
-    @Autowired
-    private PassengerService passengerService;
+    private final PassengerService passengerService;
+    private final EmailService emailService;
+    private final OtpService otpService;
 
-    public AuthenticationController(JwtService jwtService, PassengerService passengerService) {
+    public AuthenticationController(@Lazy AuthService authService, JwtService jwtService, PassengerService passengerService, EmailService emailService, OtpService otpService) {
+        this.authService = authService;
         this.jwtService = jwtService;
         this.passengerService = passengerService;
+        this.emailService = emailService;
+        this.otpService = otpService;
     }
 
 
     @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
-        logger.debug("Login request received: {}", request);
-
+    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest request) {
         try {
-            // Authentification et génération des tokens
-            logger.debug("Authenticating user: {}", request.getUsername());
-            String accessToken = authService.authenticateAndGenerateToken(request.getUsername(), request.getPassword());
+            authService.verifyCredentials(request.getUsername(), request.getPassword());
+            String otpCode = otpService.generateOtp(request.getUsername());
+            emailService.sendOtpCode(request.getUsername(), otpCode);
 
-            logger.debug("Generating refresh token for user: {}", request.getUsername());
-            String refreshToken = jwtService.generateRefreshToken(request.getUsername());
-
-            logger.debug("Fetching access token expiry for user: {}", request.getUsername());
-            String expiresIn = String.valueOf(jwtService.getAccessTokenExpiry());
-
-            logger.info("Authentication successful for user: {}", request.getUsername());
-            return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken, expiresIn));
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Un code de vérification a été envoyé par mail.");
+            return ResponseEntity.ok(response);
 
         } catch (BadCredentialsException e) {
-            logger.warn("Authentication failed for user {}: {}", request.getUsername(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new TokenResponse("Authentication failed", null, null));
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Identifiants invalides");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+
         } catch (Exception e) {
-            logger.error("Unexpected error during login for user {}: {}", request.getUsername(), e.getMessage(), e);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Erreur interne: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+    @PostMapping(value = "/verifyCode", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<TokenResponse> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
+        try {
+            logger.debug("Vérification OTP pour l'utilisateur: {}", request.getUsername());
+
+            // Vérifier si le code est correct
+            if (!otpService.validateOtp(request.getUsername(), request.getOtp())) {
+                logger.warn("OTP invalide pour l'utilisateur {}", request.getUsername());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new TokenResponse("Code invalide", null, null));
+            }
+
+            // Générer les tokens après validation du code
+            String accessToken = jwtService.generateAccessToken(request.getUsername());
+            String refreshToken = jwtService.generateRefreshToken(request.getUsername());
+            String expiresIn = String.valueOf(jwtService.getAccessTokenExpiry());
+
+            logger.info("OTP validé et tokens générés pour {}", request.getUsername());
+            return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken, expiresIn));
+
+        } catch (Exception e) {
+            logger.error("Erreur lors de la vérification OTP pour {} : {}", request.getUsername(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new TokenResponse("Internal server error", null, null));
+                    .body(new TokenResponse("Erreur interne: " + e.getMessage(), null, null));
         }
     }
 

@@ -6,7 +6,7 @@ spring:
     name: flight-management-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/flights?useUnicode=true&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3307/flights?useUnicode=true&characterEncoding=UTF-8
     username: user
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -24,6 +24,17 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
 
+  mail:
+    host: localhost
+    port: 1025
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
   kafka:
     producer:
       bootstrap-servers: localhost:9092

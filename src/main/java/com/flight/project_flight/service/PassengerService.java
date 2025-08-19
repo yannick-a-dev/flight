@@ -24,15 +24,16 @@ import java.util.stream.Collectors;
 
 @Service
 public class PassengerService implements UserDetailsService {
-    @Autowired
-    private  PassengerRepository passengerRepository;
+
+    private final  PassengerRepository passengerRepository;
     private final AuthService authService;
 
     private final PasswordEncoder passwordEncoder;
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
-    public PassengerService(@Lazy AuthService authService, PasswordEncoder passwordEncoder) {
+    public PassengerService(PassengerRepository passengerRepository, @Lazy AuthService authService, PasswordEncoder passwordEncoder) {
+        this.passengerRepository = passengerRepository;
         this.authService = authService;
         this.passwordEncoder = passwordEncoder;
     }
