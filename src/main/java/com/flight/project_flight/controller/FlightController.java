@@ -56,6 +56,17 @@ public class FlightController {
         return ResponseEntity.ok(dtos);
     }
 
+    @GetMapping("/{flightNumber}")
+    public ResponseEntity<FlightResponseDto> getFlightByNumber(@PathVariable String flightNumber) {
+        try {
+            Flight flight = flightService.getFlightByNumber(flightNumber); // à implémenter dans service
+            return ResponseEntity.ok(flightMapper.toResponseDto(flight));
+        } catch (FlightNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
     @PutMapping("/{flightNumber}")
     public ResponseEntity<Flight> updateFlight(@PathVariable String flightNumber, @RequestBody FlightDto flightDto) {
         try {

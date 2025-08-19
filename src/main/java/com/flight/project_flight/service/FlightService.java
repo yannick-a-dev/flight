@@ -119,4 +119,10 @@ public class FlightService {
     public List<Flight> getFlightsByPassenger(Long passengerId) {
         return flightRepository.findFlightsByPassengerId(passengerId);
     }
+
+    public Flight getFlightByNumber(String flightNumber) {
+        return flightRepository.findByFlightNumber(flightNumber)
+                .orElseThrow(() -> new FlightNotFoundException("Flight not found with number: " + flightNumber));
+    }
+
 }
