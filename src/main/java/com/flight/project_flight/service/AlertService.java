@@ -6,6 +6,7 @@ import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.repository.AlertRepository;
+import com.flight.project_flight.repository.FlightRepository;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -25,11 +26,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 @EnableKafka
 public class AlertService {
+
+    private final FlightRepository flightRepository;
     private static final Logger log = LoggerFactory.getLogger(AlertService.class);
     private static final Schema SCHEMA;
 
@@ -53,7 +57,8 @@ public class AlertService {
     private final AlertRepository alertRepository;
     private final KafkaTemplate<String, GenericRecord> kafkaTemplate;
 
-    public AlertService(AlertRepository alertRepository, KafkaTemplate<String, GenericRecord> kafkaTemplate) {
+    public AlertService(FlightRepository flightRepository, AlertRepository alertRepository, KafkaTemplate<String, GenericRecord> kafkaTemplate) {
+        this.flightRepository = flightRepository;
         this.alertRepository = alertRepository;
         this.kafkaTemplate = kafkaTemplate;
     }
@@ -166,5 +171,11 @@ public class AlertService {
 
     public Alert saveAlert(Alert alert) {
         return alertRepository.save(alert);
+    }
+
+    public List<Alert> getAlertsByFlightNumber(String flightNumber) {
+        Flight flight = flightRepository.findByFlightNumber(flightNumber)
+                .orElseThrow(() -> new RuntimeException("Flight not found"));
+        return flight.getAlerts();
     }
 }

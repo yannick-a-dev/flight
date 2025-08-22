@@ -6,6 +6,7 @@ import com.flight.project_flight.exception.FlightNotFoundException;
 import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Passenger;
+import com.flight.project_flight.service.AlertService;
 import com.flight.project_flight.service.FlightAlertService;
 import com.flight.project_flight.service.FlightService;
 import com.flight.project_flight.service.PassengerService;
@@ -25,15 +26,16 @@ import java.util.Optional;
 @RequestMapping("/api/alerts")
 public class AlertController {
     private static final Logger log = LoggerFactory.getLogger(AlertController.class);
-
     private final FlightAlertService flightAlertService;
     private final PassengerService passengerService;
     private final FlightService flightService;
+    private final AlertService alertService;
 
-    public AlertController(FlightAlertService flightAlertService, PassengerService passengerService, FlightService flightService) {
+    public AlertController(FlightAlertService flightAlertService, PassengerService passengerService, FlightService flightService, AlertService alertService) {
         this.flightAlertService = flightAlertService;
         this.passengerService = passengerService;
         this.flightService = flightService;
+        this.alertService = alertService;
     }
 
     @PostMapping
@@ -134,5 +136,10 @@ public class AlertController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
         return ResponseEntity.ok(alerts);
+    }
+
+    @GetMapping("{flightNumber}/alerts")
+    public List<Alert> getAlerts(@PathVariable String flightNumber) {
+        return alertService.getAlertsByFlightNumber(flightNumber);
     }
 }
