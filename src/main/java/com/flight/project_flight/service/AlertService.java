@@ -178,4 +178,8 @@ public class AlertService {
                 .orElseThrow(() -> new RuntimeException("Flight not found"));
         return flight.getAlerts();
     }
+
+    public void deleteAlertById(Long id) {
+        alertRepository.deleteById(id);
+    }
 }

@@ -171,14 +171,25 @@ public class PassengerController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePassenger(@PathVariable Long id) {
-        boolean isDeleted = passengerService.deletePassengerById(id);
-
-        if (isDeleted) {
-            return ResponseEntity.noContent().build();
-        } else {
+        // Vérifier si le passager existe
+        Optional<Passenger> passengerOpt = passengerService.getPassengerById(id);
+        if (passengerOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
+        Passenger passenger = passengerOpt.get();
+
+        // Supprimer d'abord toutes les alertes associées
+        if (passenger.getAlerts() != null && !passenger.getAlerts().isEmpty()) {
+            passenger.getAlerts().forEach(alert -> alertService.deleteAlertById(alert.getId()));
+        }
+
+        // Supprimer le passager
+        passengerService.deletePassengerById(id);
+
+        return ResponseEntity.noContent().build();
     }
+
 
     @GetMapping("/{passengerId}/flights")
     public ResponseEntity<List<Flight>> getFlightsByPassenger(@PathVariable Long passengerId) {
