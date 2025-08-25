@@ -1,5 +1,6 @@
 package com.flight.project_flight.controller;
 
+import com.flight.project_flight.dto.AlertDto;
 import com.flight.project_flight.dto.PassengerDTO;
 import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
@@ -52,10 +53,40 @@ public class PassengerController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Passenger>> getAllPassengers() {
+    public ResponseEntity<List<PassengerDTO>> getAllPassengers() {
         List<Passenger> passengers = passengerService.getAllPassengers();
-        return ResponseEntity.ok(passengers);
+        List<PassengerDTO> passengerDTOs = passengers.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(passengerDTOs);
     }
+
+    // Conversion Passenger -> PassengerDTO
+    private PassengerDTO convertToDto(Passenger passenger) {
+        PassengerDTO dto = new PassengerDTO();
+        dto.setId(passenger.getId());
+        dto.setFirstName(passenger.getFirstName());
+        dto.setLastName(passenger.getLastName());
+        dto.setEmail(passenger.getEmail());
+        dto.setPhone(passenger.getPhone());
+        dto.setPassportNumber(passenger.getPassportNumber());
+        dto.setDob(passenger.getDob());
+        dto.setEnabled(passenger.getEnabled());
+
+        // Conversion des alertes
+        List<AlertDto> alertDtos = passenger.getAlerts().stream()
+                .map(alert -> {
+                    AlertDto alertDto = new AlertDto();
+                    alertDto.setId(alert.getId());
+                    alertDto.setMessage(alert.getMessage());
+                    return alertDto;
+                })
+                .collect(Collectors.toList());
+
+        dto.setAlerts(alertDtos);
+        return dto;
+    }
+
 
     @GetMapping("/names")
     public ResponseEntity<List<String>> getPassengerNames() {
