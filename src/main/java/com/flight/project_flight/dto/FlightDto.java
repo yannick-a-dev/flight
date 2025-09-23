@@ -16,7 +16,6 @@ public class FlightDto {
     private String flightNumber;
 
     @NotNull(message = "Departure date cannot be null")
-    @PastOrPresent(message = "Departure date must be in the past or present")
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime departureTime;
 

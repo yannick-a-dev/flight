@@ -48,12 +48,11 @@ public class PassengerService implements UserDetailsService {
     }
 
     public List<Passenger> getAllPassengers() {
-        return passengerRepository.findAll().stream()
+        return passengerRepository.findAllWithReservationsAndFlights().stream()
                 .filter(passenger -> passenger.getEmail() != null && !passenger.getEmail().isEmpty())
                 .sorted(Comparator.comparing(Passenger::getId))
                 .collect(Collectors.toList());
     }
-
 
     public List<String> getPassengerNames() {
         return passengerRepository.findAll().stream()

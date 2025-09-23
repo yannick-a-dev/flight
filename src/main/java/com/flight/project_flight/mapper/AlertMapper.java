@@ -9,6 +9,7 @@ import com.flight.project_flight.repository.PassengerRepository;
 import com.flight.project_flight.service.PassengerService;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,5 +61,16 @@ public class AlertMapper {
                     return alert;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public AlertDto mapToDto(Alert alert) {
+        AlertDto dto = new AlertDto();
+        dto.setId(alert.getId());
+        dto.setMessage(alert.getMessage());
+        dto.setAlertDate(alert.getAlertDate() != null ? alert.getAlertDate() : LocalDateTime.now()); // ✅ fallback
+        dto.setSeverity(alert.getSeverity() != null ? alert.getSeverity().name() : "LOW"); // ✅ fallback
+        dto.setPassengerId(alert.getPassenger() != null ? alert.getPassenger().getId() : null);
+        dto.setFlightNumber(alert.getFlight() != null ? alert.getFlight().getFlightNumber() : null);
+        return dto;
     }
 }

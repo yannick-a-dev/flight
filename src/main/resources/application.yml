@@ -1,17 +1,17 @@
 server:
-  port: ${SERVER_PORT:8081}
-
+  port: 8080
 spring:
   application:
     name: flight-management-service
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3307/flights?useUnicode=true&characterEncoding=UTF-8}
-    username: ${SPRING_DATASOURCE_USERNAME:user}
-    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    url: jdbc:mysql://mysql-flight:3306/flights?useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+    username: user
+    password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       pool-name: HikariCP
+      initialization-fail-timeout: 60000
 
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
@@ -26,7 +26,7 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
 
   mail:
-    host: ${SPRING_MAIL_HOST:localhost}
+    host: ${SPRING_MAIL_HOST:mailhog}
     port: ${SPRING_MAIL_PORT:1025}
     username: ${SPRING_MAIL_USERNAME:}
     password: ${SPRING_MAIL_PASSWORD:}
@@ -38,8 +38,8 @@ spring:
             enable: false
 
   kafka:
+    bootstrap-servers: broker:29092
     producer:
-      bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
       client-id: flight-management-service-producer
       retries: 5
       acks: all
@@ -48,10 +48,11 @@ spring:
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       properties:
         max.request.size: 200000000
-        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8091}
+        schema.registry.url: http://schema-registry:8081
         request.timeout.ms: 120000
         metadata.fetch.timeout.ms: 120000
-
+        metric.reporters: ""
+        metrics.recording.level: NONE
     template:
       default-topic: event-placed
 
@@ -65,7 +66,7 @@ springdoc:
     path: /swagger-ui.html
 
 jwt:
-  secret: ${JWT_SECRET:kC7g8VvePaKZ6FSrkL0O3pNEakjWwRRU8GJ0aM1cyYwpWs22cD/sGfVrmF84l9ptIPlv6Fh7xn2OxAQgZ9yH/JhKLmpeXhWwXyXhUq6uW/k=}
+  secret: ${JWT_SECRET:votre-secret}
   accessToken:
     expiration: ${JWT_ACCESS_EXP:900000}
   refreshToken:
@@ -80,6 +81,7 @@ logging:
   level:
     root: INFO
     org.springframework.kafka: DEBUG
+    org.apache.kafka.clients.NetworkClient: DEBUG
 
 management:
   endpoints:

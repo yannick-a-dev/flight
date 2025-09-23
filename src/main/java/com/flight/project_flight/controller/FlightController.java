@@ -36,12 +36,8 @@ public class FlightController {
                     .collect(Collectors.toList());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
         }
-
         Flight createdFlight = flightService.createFlight(flightDto);
-
-        // ✅ Appel du mapper pour créer un DTO propre
         FlightResponseDto responseDto = flightMapper.toResponseDto(createdFlight);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 

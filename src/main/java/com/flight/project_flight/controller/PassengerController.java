@@ -2,6 +2,7 @@ package com.flight.project_flight.controller;
 
 import com.flight.project_flight.dto.AlertDto;
 import com.flight.project_flight.dto.PassengerDTO;
+import com.flight.project_flight.mapper.PassengerMapper;
 import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Passenger;
@@ -24,13 +25,15 @@ import java.util.stream.Collectors;
 @RestController
 public class PassengerController {
 
+    private final PassengerMapper passengerMapper;
     private final PassengerService passengerService;
     private final FlightService flightService;
     private final AlertService alertService;
     private final AlertConverter alertConverter;
     private final PasswordEncoder passwordEncoder;
 
-    public PassengerController(PassengerService passengerService, FlightService flightService, AlertService alertService, AlertConverter alertConverter, PasswordEncoder passwordEncoder) {
+    public PassengerController(PassengerMapper passengerMapper, PassengerService passengerService, FlightService flightService, AlertService alertService, AlertConverter alertConverter, PasswordEncoder passwordEncoder) {
+        this.passengerMapper = passengerMapper;
         this.passengerService = passengerService;
         this.flightService = flightService;
         this.alertService = alertService;
@@ -56,37 +59,10 @@ public class PassengerController {
     public ResponseEntity<List<PassengerDTO>> getAllPassengers() {
         List<Passenger> passengers = passengerService.getAllPassengers();
         List<PassengerDTO> passengerDTOs = passengers.stream()
-                .map(this::convertToDto)
+                .map(passengerMapper::convertToDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(passengerDTOs);
     }
-
-    // Conversion Passenger -> PassengerDTO
-    private PassengerDTO convertToDto(Passenger passenger) {
-        PassengerDTO dto = new PassengerDTO();
-        dto.setId(passenger.getId());
-        dto.setFirstName(passenger.getFirstName());
-        dto.setLastName(passenger.getLastName());
-        dto.setEmail(passenger.getEmail());
-        dto.setPhone(passenger.getPhone());
-        dto.setPassportNumber(passenger.getPassportNumber());
-        dto.setDob(passenger.getDob());
-        dto.setEnabled(passenger.getEnabled());
-
-        // Conversion des alertes
-        List<AlertDto> alertDtos = passenger.getAlerts().stream()
-                .map(alert -> {
-                    AlertDto alertDto = new AlertDto();
-                    alertDto.setId(alert.getId());
-                    alertDto.setMessage(alert.getMessage());
-                    return alertDto;
-                })
-                .collect(Collectors.toList());
-
-        dto.setAlerts(alertDtos);
-        return dto;
-    }
-
 
     @GetMapping("/names")
     public ResponseEntity<List<String>> getPassengerNames() {
@@ -103,66 +79,42 @@ public class PassengerController {
                             .body(null);
                 });
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePassenger(@PathVariable Long id, @RequestBody PassengerDTO passengerDTO) {
         return passengerService.getPassengerById(id)
                 .map(existingPassenger -> {
-                    // Mettre à jour les propriétés du passager
-                    updatePassengerDetails(existingPassenger, passengerDTO);
-
-                    // Vérifier si le mot de passe est fourni
+                    passengerMapper.updatePassengerDetails(existingPassenger, passengerDTO);
                     if (passengerDTO.getPassword() != null && !passengerDTO.getPassword().isEmpty()) {
-                        // Encoder le mot de passe avant de le stocker
                         String encodedPassword = passwordEncoder.encode(passengerDTO.getPassword());
                         existingPassenger.setPassword(encodedPassword);
                         System.out.println("Mot de passe encodé : " + encodedPassword);  // Log du mot de passe encodé
                     }
-
-                    // Appliquer l'encodage si nécessaire
                     if (existingPassenger.getPassword() == null || existingPassenger.getPassword().isEmpty()) {
-                        existingPassenger.setPassword("default_password");  // Appliquer un mot de passe par défaut si nécessaire
-                        System.out.println("Mot de passe par défaut appliqué");  // Log pour le mot de passe par défaut
+                        existingPassenger.setPassword("default_password");
+                        System.out.println("Mot de passe par défaut appliqué");
                     }
-
-                    // Mettre à jour les alertes, tout en gérant les potentiels cas d'absence de vol ou d'alertes nulles
                     try {
                         List<Alert> updatedAlerts = updatePassengerAlerts(existingPassenger, passengerDTO);
                         existingPassenger.setAlerts(updatedAlerts);
                     } catch (RuntimeException e) {
-                        // Renvoie une réponse avec une erreur sans corps
-                        return ResponseEntity.badRequest().build(); // Gérer l'absence de vol lié au passager
+                        return ResponseEntity.badRequest().build();
                     }
-
-                    // Sauvegarder le passager mis à jour
                     Passenger updatedPassenger = passengerService.savePassenger(existingPassenger);
                     return ResponseEntity.ok(updatedPassenger);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Méthode pour mettre à jour les détails du passager
-    private void updatePassengerDetails(Passenger passenger, PassengerDTO passengerDTO) {
-        passenger.setFirstName(passengerDTO.getFirstName());
-        passenger.setLastName(passengerDTO.getLastName());
-        passenger.setEmail(passengerDTO.getEmail());
-        passenger.setPhone(passengerDTO.getPhone());
-        passenger.setPassportNumber(passengerDTO.getPassportNumber());
-        passenger.setDob(passengerDTO.getDob());
-    }
-
-    // Méthode pour mettre à jour les alertes du passager
     private List<Alert> updatePassengerAlerts(Passenger passenger, PassengerDTO passengerDTO) {
         return Optional.ofNullable(passengerDTO.getAlerts())
-                .orElse(Collections.emptyList()) // Initialiser une liste vide si aucune alerte n'est fournie
+                .orElse(Collections.emptyList())
                 .stream()
                 .map(alertDto -> {
-                    // Trouver le premier vol lié au passager via ses réservations
                     Flight flight = passenger.getReservations().stream()
                             .map(Reservation::getFlight)
-                            .findFirst() // Supposant qu'un passager est lié à au moins un vol
+                            .findFirst()
                             .orElseThrow(() -> new RuntimeException("No flight associated with passenger"));
-
-                    // Convertir le DTO en entité et sauvegarder l'alerte
                     Alert alert = alertConverter.convertToEntity(alertDto, passenger, flight);
                     return alertService.saveAlert(alert);
                 })
@@ -171,22 +123,15 @@ public class PassengerController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePassenger(@PathVariable Long id) {
-        // Vérifier si le passager existe
         Optional<Passenger> passengerOpt = passengerService.getPassengerById(id);
         if (passengerOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-
         Passenger passenger = passengerOpt.get();
-
-        // Supprimer d'abord toutes les alertes associées
         if (passenger.getAlerts() != null && !passenger.getAlerts().isEmpty()) {
             passenger.getAlerts().forEach(alert -> alertService.deleteAlertById(alert.getId()));
         }
-
-        // Supprimer le passager
         passengerService.deletePassengerById(id);
-
         return ResponseEntity.noContent().build();
     }
 

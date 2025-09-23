@@ -3,6 +3,7 @@ package com.flight.project_flight.controller;
 import com.flight.project_flight.dto.AlertDto;
 import com.flight.project_flight.enums.Severity;
 import com.flight.project_flight.exception.FlightNotFoundException;
+import com.flight.project_flight.mapper.AlertMapper;
 import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Passenger;
@@ -27,36 +28,33 @@ import java.util.Optional;
 public class AlertController {
 
     private static final Logger log = LoggerFactory.getLogger(AlertController.class);
-
     private final FlightAlertService flightAlertService;
     private final PassengerService passengerService;
     private final FlightService flightService;
     private final AlertService alertService;
+    private final AlertMapper alertMapper;
 
     public AlertController(FlightAlertService flightAlertService, PassengerService passengerService,
-                           FlightService flightService, AlertService alertService) {
+                           FlightService flightService, AlertService alertService, AlertMapper alertMapper) {
         this.flightAlertService = flightAlertService;
         this.passengerService = passengerService;
         this.flightService = flightService;
         this.alertService = alertService;
+        this.alertMapper = alertMapper;
     }
 
-    // ------------------- Création d'une alerte -------------------
     @PostMapping
     public ResponseEntity<AlertDto> createAlert(@RequestBody AlertDto alertDto) {
         log.debug("Received request to create alert: {}", alertDto);
-
         if (alertDto.getPassengerId() == null || alertDto.getFlightNumber() == null) {
             log.error("PassengerId or FlightNumber is missing in the request: {}", alertDto);
             return ResponseEntity.badRequest().build();
         }
-
         Passenger passenger = passengerService.findById(alertDto.getPassengerId());
         if (passenger == null) {
             log.error("Passenger not found with ID: {}", alertDto.getPassengerId());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-
         Flight flight = flightService.findByFlightNumber(alertDto.getFlightNumber())
                 .orElseThrow(() -> new FlightNotFoundException(alertDto.getFlightNumber()));
 
@@ -83,44 +81,37 @@ public class AlertController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapToDto(alert));
+        return ResponseEntity.status(HttpStatus.CREATED).body(alertMapper.mapToDto(alert));
     }
 
-    // ------------------- Récupérer toutes les alertes -------------------
     @GetMapping("/all")
     public ResponseEntity<List<AlertDto>> getAllAlerts() {
         List<Alert> alerts = flightAlertService.getAllAlerts();
-
-        // 🚨 Nettoyage côté backend : suppression des alertes incomplètes
         List<AlertDto> dtos = alerts.stream()
                 .filter(a -> a != null && a.getId() != null && a.getMessage() != null && a.getSeverity() != null)
-                .map(this::mapToDto)
+                .map(alertMapper::mapToDto)
                 .toList();
-
         if (dtos.isEmpty()) {
             log.warn("⚠️ Aucune alerte valide trouvée dans la base !");
             return ResponseEntity.noContent().build();
         }
-
         log.debug("✅ {} alertes valides envoyées au frontend", dtos.size());
         return ResponseEntity.ok(dtos);
     }
 
-    // ------------------- Récupérer une alerte par ID -------------------
     @GetMapping("/{id}")
     public ResponseEntity<AlertDto> getAlertById(@PathVariable Long id) {
         Alert alert = flightAlertService.getAlertById(id);
         if (alert == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.ok(mapToDto(alert));
+        return ResponseEntity.ok(alertMapper.mapToDto(alert));
     }
 
-    // ------------------- Récupérer les alertes d'un passager -------------------
     @GetMapping("/passenger/{passengerId}")
     public ResponseEntity<List<AlertDto>> getAlertsForPassenger(@PathVariable Long passengerId) {
         List<AlertDto> dtos = flightAlertService.getAlertsForPassenger(passengerId).stream()
-                .map(this::mapToDto)
+                .map(alertMapper::mapToDto)
                 .toList();
 
         if (dtos.isEmpty()) {
@@ -129,28 +120,15 @@ public class AlertController {
         return ResponseEntity.ok(dtos);
     }
 
-    // ------------------- Récupérer les alertes d'un vol -------------------
     @GetMapping("{flightNumber}/alerts")
     public ResponseEntity<List<AlertDto>> getAlertsForFlight(@PathVariable String flightNumber) {
         List<AlertDto> dtos = alertService.getAlertsByFlightNumber(flightNumber).stream()
-                .map(this::mapToDto)
+                .map(alertMapper::mapToDto)
                 .toList();
 
         if (dtos.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(dtos);
-    }
-
-    // ------------------- Mapper Alert -> AlertDto -------------------
-    private AlertDto mapToDto(Alert alert) {
-        AlertDto dto = new AlertDto();
-        dto.setId(alert.getId());
-        dto.setMessage(alert.getMessage());
-        dto.setAlertDate(alert.getAlertDate() != null ? alert.getAlertDate() : LocalDateTime.now()); // ✅ fallback
-        dto.setSeverity(alert.getSeverity() != null ? alert.getSeverity().name() : "LOW"); // ✅ fallback
-        dto.setPassengerId(alert.getPassenger() != null ? alert.getPassenger().getId() : null);
-        dto.setFlightNumber(alert.getFlight() != null ? alert.getFlight().getFlightNumber() : null);
-        return dto;
     }
 }

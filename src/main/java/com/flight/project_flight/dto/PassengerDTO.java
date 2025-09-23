@@ -23,6 +23,7 @@ public class PassengerDTO {
     private List<AlertDto> alerts = new ArrayList<>();
     @NotNull(message = "Enabled is required")
     private Boolean enabled = false;
+    private List<String> flightNumbers;
 
     public Long getId() {
         return id;
@@ -102,5 +103,13 @@ public class PassengerDTO {
 
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public List<String> getFlightNumbers() {
+        return flightNumbers;
+    }
+
+    public void setFlightNumbers(List<String> flightNumbers) {
+        this.flightNumbers = flightNumbers;
     }
 }

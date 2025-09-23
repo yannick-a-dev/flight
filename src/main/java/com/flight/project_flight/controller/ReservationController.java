@@ -28,7 +28,6 @@ public class ReservationController {
             @PathVariable String flightNumber,
             @RequestBody ReservationDto dto) {
         dto.setFlightNumber(flightNumber);
-
         Reservation reservation = reservationService.createReservation(dto);
         return ResponseEntity.ok(reservation);
     }

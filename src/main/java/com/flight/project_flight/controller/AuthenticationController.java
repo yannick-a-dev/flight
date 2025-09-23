@@ -43,22 +43,47 @@ public class AuthenticationController {
 
     @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest request) {
-        try {
-            authService.verifyCredentials(request.getUsername(), request.getPassword());
-            String otpCode = otpService.generateOtp(request.getUsername());
-            emailService.sendOtpCode(request.getUsername(), otpCode);
+        Map<String, String> response = new HashMap<>();
 
-            Map<String, String> response = new HashMap<>();
+        try {
+            // 1️⃣ Vérification des identifiants
+            try {
+                authService.verifyCredentials(request.getUsername(), request.getPassword());
+            } catch (BadCredentialsException e) {
+                response.put("message", "Identifiants invalides");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            } catch (Exception e) {
+                e.printStackTrace(); // debug complet
+                response.put("message", "Erreur lors de la vérification des identifiants: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+
+            // 2️⃣ Génération du code OTP
+            String otpCode;
+            try {
+                otpCode = otpService.generateOtp(request.getUsername());
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.put("message", "Erreur lors de la génération du code OTP: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+
+            // 3️⃣ Envoi de l'email
+            try {
+                emailService.sendOtpCode(request.getUsername(), otpCode);
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.put("message", "Erreur lors de l'envoi de l'email OTP: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+
+            // 4️⃣ Réponse OK
             response.put("message", "Un code de vérification a été envoyé par mail.");
             return ResponseEntity.ok(response);
 
-        } catch (BadCredentialsException e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Identifiants invalides");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-
         } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
+            // Catch global, si jamais une autre exception imprévue se produit
+            e.printStackTrace();
             response.put("message", "Erreur interne: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
@@ -103,9 +128,6 @@ public class AuthenticationController {
                 .body(savedPassenger);
     }
 
-
-
-
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         String newAccessToken = jwtService.refreshAccessToken(request.getRefreshToken());
@@ -113,7 +135,6 @@ public class AuthenticationController {
         String expiresIn = String.valueOf(jwtService.getAccessTokenExpiry());
         return ResponseEntity.ok(new TokenResponse(newAccessToken, newRefreshToken, expiresIn));
     }
-
 
     @GetMapping("/permissions")
     public ResponseEntity<?> checkPermissions() {

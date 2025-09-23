@@ -1,52 +1,5 @@
-version: '3.8'
-
 services:
-  # MySQL Flight Database
-  mysql-flight:
-    image: mysql:8.0
-    container_name: flight-db
-    ports:
-      - "3307:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: root-password
-      MYSQL_DATABASE: flights
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-    volumes:
-      - db_data:/var/lib/mysql
-    networks:
-      - flight-network
-
-  # Backend Spring Boot Application
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: flight-backend
-    ports:
-      - "8083:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-flight:3306/flights?useUnicode=true&characterEncoding=UTF-8
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: broker:29092
-      SCHEMA_REGISTRY_URL: http://schema-registry:8081
-      SPRING_MAIL_HOST: mailhog
-      SPRING_MAIL_PORT: 1025
-      JWT_SECRET: "kC7g8VvePaKZ6FSrkL0O3pNEakjWwRRU8GJ0aM1cyYwpWs22cD/sGfVrmF84l9ptIPlv6Fh7xn2OxAQgZ9yH/JhKLmpeXhWwXyXhUq6uW/k="
-    depends_on:
-      - mysql-flight
-      - broker
-      - schema-registry
-      - mailhog
-    volumes:
-      - maven_repo:/root/.m2
-    networks:
-      - flight-network
-
-  # Zookeeper Service
+  # Zookeeper
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
@@ -70,54 +23,68 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_MESSAGE_MAX_BYTES: 512000000
-      KAFKA_REPLICA_FETCH_MAX_BYTES: 512000000
-      KAFKA_SOCKET_REQUEST_MAX_BYTES: 512000000
-    healthcheck:
-      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/9092"]
-      retries: 5
-      interval: 10s
-      start_period: 30s
-      timeout: 10s
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     networks:
       - flight-network
 
-  # Kafka Schema Registry
+
+  # Schema Registry
   schema-registry:
     image: confluentinc/cp-schema-registry:7.5.0
-    hostname: schema-registry
     container_name: schema-registry
     depends_on:
       - broker
     ports:
-      - "8091:8081"
+      - "8081:8081"
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'PLAINTEXT://broker:29092'
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://broker:29092
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-      SCHEMA_REGISTRY_MAX_REQUEST_SIZE: "500000000"
-      SCHEMA_REGISTRY_MAX_RESPONSE_SIZE: "500000000"
-      SCHEMA_REGISTRY_KAFKASTORE_MAX_REQUEST_SIZE: "500000000"
     networks:
       - flight-network
 
-  # Kafka UI
-  kafka-ui:
-    container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - "8080:8080"
+  # Backend Spring Boot
+  flight-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flight-backend
     depends_on:
       - broker
       - schema-registry
+      - mysql-flight
+      - mailhog
+    ports:
+      - "8083:8080"
     environment:
-      KAFKA_CLUSTERS_NAME: local
-      KAFKA_CLUSTERS_BOOTSTRAPSERVERS: broker:29092
-      KAFKA_CLUSTERS_SCHEMAREGISTRY: http://schema-registry:8081
-      DYNAMIC_CONFIG_ENABLED: 'true'
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-flight:3306/flights?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: broker:29092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+      JWT_SECRET: "votre-secret"
+    networks:
+      - flight-network
+
+  # MySQL
+  mysql-flight:
+    image: mysql:8.0
+    container_name: mysql-flight
+    environment:
+      MYSQL_ROOT_PASSWORD: root-password
+      MYSQL_DATABASE: flights
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
     networks:
       - flight-network
 
@@ -126,17 +93,11 @@ services:
     image: mailhog/mailhog
     container_name: mailhog
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Interface Web
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
     networks:
       - flight-network
 
-# Volumes
-volumes:
-  db_data:
-  maven_repo:
-
-# Network
 networks:
   flight-network:
     driver: bridge
