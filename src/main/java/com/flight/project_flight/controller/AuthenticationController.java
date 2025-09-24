@@ -3,10 +3,7 @@ package com.flight.project_flight.controller;
 import com.flight.project_flight.config.JwtService;
 import com.flight.project_flight.dto.*;
 import com.flight.project_flight.models.Passenger;
-import com.flight.project_flight.service.AuthService;
-import com.flight.project_flight.service.EmailService;
-import com.flight.project_flight.service.OtpService;
-import com.flight.project_flight.service.PassengerService;
+import com.flight.project_flight.service.*;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,13 +28,15 @@ public class AuthenticationController {
     private final PassengerService passengerService;
     private final EmailService emailService;
     private final OtpService otpService;
+    private final ForgotPasswordService forgotPasswordService;
 
-    public AuthenticationController(@Lazy AuthService authService, JwtService jwtService, PassengerService passengerService, EmailService emailService, OtpService otpService) {
+    public AuthenticationController(@Lazy AuthService authService, JwtService jwtService, PassengerService passengerService, EmailService emailService, OtpService otpService, ForgotPasswordService forgotPasswordService) {
         this.authService = authService;
         this.jwtService = jwtService;
         this.passengerService = passengerService;
         this.emailService = emailService;
         this.otpService = otpService;
+        this.forgotPasswordService = forgotPasswordService;
     }
 
 
@@ -89,7 +88,6 @@ public class AuthenticationController {
         }
     }
 
-
     @PostMapping(value = "/verifyCode", consumes = "application/json", produces = "application/json")
     public ResponseEntity<TokenResponse> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
         try {
@@ -135,6 +133,37 @@ public class AuthenticationController {
         String expiresIn = String.valueOf(jwtService.getAccessTokenExpiry());
         return ResponseEntity.ok(new TokenResponse(newAccessToken, newRefreshToken, expiresIn));
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        try {
+            // Génération et envoi du token
+            forgotPasswordService.generateAndSendToken(email);
+            return ResponseEntity.ok(Map.of("message", "Un lien de réinitialisation a été envoyé à votre adresse email."));
+        } catch (Exception e) {
+            logger.error("Erreur lors de l'envoi du lien de réinitialisation pour {} : {}", email, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erreur interne : " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String token, @RequestParam String newPassword) {
+        try {
+            forgotPasswordService.resetPassword(token, newPassword);
+            return ResponseEntity.ok(Map.of("message", "Mot de passe réinitialisé avec succès"));
+        } catch (RuntimeException e) {
+            logger.warn("Échec réinitialisation mot de passe : {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Erreur interne lors de la réinitialisation du mot de passe : {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erreur interne"));
+        }
+    }
+
+
 
     @GetMapping("/permissions")
     public ResponseEntity<?> checkPermissions() {
