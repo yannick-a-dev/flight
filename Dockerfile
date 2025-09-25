@@ -19,10 +19,8 @@ RUN apt-get update && \
     apt-get install -y netcat curl && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /app/target/*.jar /app.jar
-
+COPY --from=build /app/target/project-flight-0.0.1-SNAPSHOT.jar /app.jar
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "/app.jar"]
-
+CMD ["java", "-jar", "app.jar"]

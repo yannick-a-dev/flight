@@ -140,4 +140,9 @@ public class PassengerService implements UserDetailsService {
     public Passenger findById(Long id) {
         return passengerRepository.findById(id).orElseThrow(() -> new RuntimeException("Passenger not found"));
     }
+
+    public void deletePassenger(Passenger passenger) {
+        passengerRepository.delete(passenger);
+    }
+
 }

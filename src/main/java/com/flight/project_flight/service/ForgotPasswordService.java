@@ -15,13 +15,19 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class ForgotPasswordService {
 
     private final PasswordResetTokenRepository tokenRepository;
     private final PassengerRepository passengerRepository;
     private final JavaMailSender mailSender;
     private final PasswordEncoder passwordEncoder;
+
+    public ForgotPasswordService(PasswordResetTokenRepository tokenRepository, PassengerRepository passengerRepository, JavaMailSender mailSender, PasswordEncoder passwordEncoder) {
+        this.tokenRepository = tokenRepository;
+        this.passengerRepository = passengerRepository;
+        this.mailSender = mailSender;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     /**
      * Génère un token et envoie un email pour la réinitialisation

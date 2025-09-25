@@ -46,13 +46,13 @@ public class Passenger implements UserDetails {
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime dob;
 
-    @OneToMany(mappedBy = "passenger")
     @ToString.Exclude
-    private List<Reservation> reservations;
+    @OneToMany(mappedBy = "passenger", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Reservation> reservations = new ArrayList<>();
 
-    @OneToMany(mappedBy = "passenger")
+    @OneToMany(mappedBy = "passenger", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @ToString.Exclude
-    private List<Alert> alerts;
+    private List<Alert> alerts = new ArrayList<>();
 
     @NotBlank(message = "Password is required")
     private String password;

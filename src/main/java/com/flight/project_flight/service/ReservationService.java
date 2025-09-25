@@ -7,6 +7,8 @@ import com.flight.project_flight.models.Reservation;
 import com.flight.project_flight.repository.FlightRepository;
 import com.flight.project_flight.repository.PassengerRepository;
 import com.flight.project_flight.repository.ReservationRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,6 +49,15 @@ public class ReservationService {
         Flight flight = flightRepository.findByFlightNumber(flightNumber)
                 .orElseThrow(() -> new RuntimeException("Flight not found"));
         return flight.getReservations();
+    }
+    @Transactional
+    public void deleteReservationById(Long id) {
+        // Vérifie si la réservation existe avant de supprimer
+        if (reservationRepository.existsById(id)) {
+            reservationRepository.deleteById(id);
+        } else {
+            throw new EntityNotFoundException("Reservation with id " + id + " not found");
+        }
     }
 }
 

@@ -31,11 +31,11 @@ public class Flight {
     @Enumerated(EnumType.STRING)
     private FlightStatus status;
 
-    @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<Reservation> reservations;
 
-    @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<Alert> alerts;
 

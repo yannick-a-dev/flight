@@ -7,10 +7,7 @@ import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.models.Reservation;
-import com.flight.project_flight.service.AlertConverter;
-import com.flight.project_flight.service.AlertService;
-import com.flight.project_flight.service.FlightService;
-import com.flight.project_flight.service.PassengerService;
+import com.flight.project_flight.service.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,14 +27,17 @@ public class PassengerController {
     private final FlightService flightService;
     private final AlertService alertService;
     private final AlertConverter alertConverter;
+
+    private final ReservationService reservationService;
     private final PasswordEncoder passwordEncoder;
 
-    public PassengerController(PassengerMapper passengerMapper, PassengerService passengerService, FlightService flightService, AlertService alertService, AlertConverter alertConverter, PasswordEncoder passwordEncoder) {
+    public PassengerController(PassengerMapper passengerMapper, PassengerService passengerService, FlightService flightService, AlertService alertService, AlertConverter alertConverter, ReservationService reservationService, PasswordEncoder passwordEncoder) {
         this.passengerMapper = passengerMapper;
         this.passengerService = passengerService;
         this.flightService = flightService;
         this.alertService = alertService;
         this.alertConverter = alertConverter;
+        this.reservationService = reservationService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -82,39 +82,65 @@ public class PassengerController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePassenger(@PathVariable Long id, @RequestBody PassengerDTO passengerDTO) {
-        return passengerService.getPassengerById(id)
-                .map(existingPassenger -> {
-                    passengerMapper.updatePassengerDetails(existingPassenger, passengerDTO);
-                    if (passengerDTO.getPassword() != null && !passengerDTO.getPassword().isEmpty()) {
-                        String encodedPassword = passwordEncoder.encode(passengerDTO.getPassword());
-                        existingPassenger.setPassword(encodedPassword);
-                        System.out.println("Mot de passe encodé : " + encodedPassword);  // Log du mot de passe encodé
-                    }
-                    if (existingPassenger.getPassword() == null || existingPassenger.getPassword().isEmpty()) {
-                        existingPassenger.setPassword("default_password");
-                        System.out.println("Mot de passe par défaut appliqué");
-                    }
-                    try {
-                        List<Alert> updatedAlerts = updatePassengerAlerts(existingPassenger, passengerDTO);
-                        existingPassenger.setAlerts(updatedAlerts);
-                    } catch (RuntimeException e) {
-                        return ResponseEntity.badRequest().build();
-                    }
-                    Passenger updatedPassenger = passengerService.savePassenger(existingPassenger);
-                    return ResponseEntity.ok(updatedPassenger);
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        try {
+            return passengerService.getPassengerById(id)
+                    .map(existingPassenger -> {
+
+                        // Mise à jour des détails généraux
+                        passengerMapper.updatePassengerDetails(existingPassenger, passengerDTO);
+
+                        // Gestion du mot de passe
+                        if (passengerDTO.getPassword() != null && !passengerDTO.getPassword().isEmpty()) {
+                            String encodedPassword = passwordEncoder.encode(passengerDTO.getPassword());
+                            existingPassenger.setPassword(encodedPassword);
+                            System.out.println("Mot de passe encodé : " + encodedPassword);
+                        } else if (existingPassenger.getPassword() == null || existingPassenger.getPassword().isEmpty()) {
+                            String defaultPassword = passwordEncoder.encode("default_password");
+                            existingPassenger.setPassword(defaultPassword);
+                            System.out.println("Mot de passe par défaut encodé appliqué");
+                        }
+
+                        // Gestion des alertes
+                        try {
+                            List<Alert> updatedAlerts = updatePassengerAlerts(existingPassenger, passengerDTO);
+                            existingPassenger.getAlerts().clear();
+                            existingPassenger.getAlerts().addAll(updatedAlerts);
+                        } catch (RuntimeException e) {
+                            System.err.println("Erreur lors de la mise à jour des alertes : " + e.getMessage());
+                            return ResponseEntity.badRequest().body("Impossible de mettre à jour les alertes : " + e.getMessage());
+                        }
+
+                        // Sauvegarde finale
+                        Passenger updatedPassenger = passengerService.savePassenger(existingPassenger);
+                        return ResponseEntity.ok(updatedPassenger);
+
+                    })
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur interne serveur : " + e.getMessage());
+        }
     }
 
     private List<Alert> updatePassengerAlerts(Passenger passenger, PassengerDTO passengerDTO) {
-        return Optional.ofNullable(passengerDTO.getAlerts())
-                .orElse(Collections.emptyList())
-                .stream()
+        // Si pas d'alertes envoyées, retourne liste vide
+        if (passengerDTO.getAlerts() == null || passengerDTO.getAlerts().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Vérifie si le passager a au moins une réservation
+        Optional<Flight> flightOpt = passenger.getReservations().stream()
+                .map(Reservation::getFlight)
+                .findFirst();
+        if (flightOpt.isEmpty()) {
+            throw new RuntimeException("Le passager n'a aucune réservation associée.");
+        }
+        Flight flight = flightOpt.get();
+
+        // Conversion des alertes DTO en entité et sauvegarde
+        return passengerDTO.getAlerts().stream()
                 .map(alertDto -> {
-                    Flight flight = passenger.getReservations().stream()
-                            .map(Reservation::getFlight)
-                            .findFirst()
-                            .orElseThrow(() -> new RuntimeException("No flight associated with passenger"));
                     Alert alert = alertConverter.convertToEntity(alertDto, passenger, flight);
                     return alertService.saveAlert(alert);
                 })
@@ -127,11 +153,8 @@ public class PassengerController {
         if (passengerOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        Passenger passenger = passengerOpt.get();
-        if (passenger.getAlerts() != null && !passenger.getAlerts().isEmpty()) {
-            passenger.getAlerts().forEach(alert -> alertService.deleteAlertById(alert.getId()));
-        }
-        passengerService.deletePassengerById(id);
+
+        passengerService.deletePassenger(passengerOpt.get());
         return ResponseEntity.noContent().build();
     }
 

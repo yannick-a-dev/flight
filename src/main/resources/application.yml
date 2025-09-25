@@ -5,7 +5,7 @@ spring:
     name: flight-management-service
 
   datasource:
-    url: jdbc:mysql://mysql-flight:3306/flights?useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+    url: jdbc:mysql://mysql-flight:3306/flights?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
     username: user
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -38,7 +38,7 @@ spring:
             enable: false
 
   kafka:
-    bootstrap-servers: broker:29092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
     producer:
       client-id: flight-management-service-producer
       retries: 5
@@ -48,7 +48,7 @@ spring:
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       properties:
         max.request.size: 200000000
-        schema.registry.url: http://localhost:8081
+        schema.registry.url: ${SCHEMA_REGISTRY_URL}
         request.timeout.ms: 120000
         metadata.fetch.timeout.ms: 120000
         metric.reporters: ""
