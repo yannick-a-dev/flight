@@ -1,7 +1,10 @@
 package com.flight.project_flight.service;
 
+import com.flight.project_flight.dto.AlertDto;
 import com.flight.project_flight.dto.FlightDto;
+import com.flight.project_flight.dto.ReservationDto;
 import com.flight.project_flight.enums.FlightStatus;
+import com.flight.project_flight.enums.Severity;
 import com.flight.project_flight.exception.FlightNotFoundException;
 import com.flight.project_flight.exception.InvalidFlightDataException;
 import com.flight.project_flight.mapper.AlertMapper;
@@ -11,8 +14,10 @@ import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Reservation;
 import com.flight.project_flight.repository.AirportRepository;
 import com.flight.project_flight.repository.FlightRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -83,32 +88,82 @@ public class FlightService {
         return flightRepository.findByFlightNumber(flightNumber);
     }
 
+    @Transactional
     public Flight updateFlight(String flightNumber, FlightDto flightDto) {
-        // 1. Find the existing flight by its flight number
         Flight existingFlight = flightRepository.findByFlightNumber(flightNumber)
                 .orElseThrow(() -> new FlightNotFoundException(flightNumber));
 
-        // 2. Validate the flight data
+        // Validation des dates
         if (flightDto.getDepartureTime().isAfter(flightDto.getArrivalTime())) {
             throw new InvalidFlightDataException("Departure time cannot be after arrival time.");
         }
 
-        // 3. Map DTO to entity
         existingFlight.setDepartureTime(flightDto.getDepartureTime());
         existingFlight.setArrivalTime(flightDto.getArrivalTime());
-
         existingFlight.setDepartureAirport(flightDto.getDepartureAirport());
         existingFlight.setArrivalAirport(flightDto.getArrivalAirport());
-        // Update other fields
-        existingFlight.setStatus(FlightStatus.valueOf(flightDto.getStatus()));
-        existingFlight.setReservations(reservationMapper.mapToReservations(flightDto.getReservations(), existingFlight));
-        existingFlight.setAlerts(alertMapper.mapToAlerts(flightDto.getAlerts(), existingFlight));
 
-        // 4. Save and return the updated flight
+        // Validation du statut
+        try {
+            existingFlight.setStatus(FlightStatus.valueOf(flightDto.getStatus()));
+        } catch (IllegalArgumentException e) {
+            throw new InvalidFlightDataException("Invalid flight status: " + flightDto.getStatus());
+        }
+
+        // --- ALERTS ---
+        // Supprimer les alertes existantes non présentes dans le DTO
+        existingFlight.getAlerts().removeIf(alert ->
+                flightDto.getAlerts() == null || flightDto.getAlerts().stream().noneMatch(dto ->
+                        dto.getId() != null && dto.getId().equals(alert.getId())
+                )
+        );
+
+        if (flightDto.getAlerts() != null) {
+            for (AlertDto dto : flightDto.getAlerts()) {
+                if (dto.getId() == null) {
+                    Alert newAlert = alertMapper.toEntity(dto);
+                    newAlert.setFlight(existingFlight);
+                    existingFlight.getAlerts().add(newAlert);
+                } else {
+                    existingFlight.getAlerts().stream()
+                            .filter(a -> a.getId().equals(dto.getId()))
+                            .findFirst()
+                            .ifPresent(alert -> {
+                                alert.setMessage(dto.getMessage());
+                                alert.setAlertDate(dto.getAlertDate());
+                                alert.setSeverity(Severity.valueOf(dto.getSeverity()));
+                            });
+                }
+            }
+        }
+
+        // --- RESERVATIONS ---
+        existingFlight.getReservations().removeIf(reservation ->
+                flightDto.getReservations() == null || flightDto.getReservations().stream().noneMatch(dto ->
+                        dto.getId() != null && dto.getId().equals(reservation.getId())
+                )
+        );
+
+        if (flightDto.getReservations() != null) {
+            for (ReservationDto dto : flightDto.getReservations()) {
+                if (dto.getId() == null) {
+                    Reservation newRes = reservationMapper.mapToReservations(List.of(dto), existingFlight).get(0);
+                    existingFlight.getReservations().add(newRes);
+                } else {
+                    existingFlight.getReservations().stream()
+                            .filter(r -> r.getId().equals(dto.getId()))
+                            .findFirst()
+                            .ifPresent(reservation -> {
+                                reservation.setSeatNumber(dto.getSeatNumber());
+                                reservation.setPrice(dto.getPrice());
+                                reservation.setReservationDate(dto.getReservationDate());
+                            });
+                }
+            }
+        }
+
         return flightRepository.save(existingFlight);
     }
-
-
 
 
     public void deleteFlight(String flightNumber) {

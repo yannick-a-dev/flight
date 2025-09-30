@@ -25,14 +25,15 @@ public class ReservationService {
         this.passengerRepository = passengerRepository;
     }
 
+    @Transactional
     public Reservation createReservation(ReservationDto dto) {
-        // Récupérer le vol par flightNumber
+        // Vérifier que le vol existe
         Flight flight = flightRepository.findByFlightNumber(dto.getFlightNumber())
-                .orElseThrow(() -> new RuntimeException("Flight not found"));
+                .orElseThrow(() -> new FlightNotFoundException(dto.getFlightNumber()));
 
-        // Récupérer le passager
+        // Vérifier que le passager existe
         Passenger passenger = passengerRepository.findById(dto.getPassengerId())
-                .orElseThrow(() -> new RuntimeException("Passenger not found"));
+                .orElseThrow(() -> new PassengerNotFoundException("Passenger not found with id: " + dto.getPassengerId()));
 
         // Créer l'entité Reservation
         Reservation reservation = new Reservation();
@@ -41,7 +42,7 @@ public class ReservationService {
         reservation.setReservationDate(dto.getReservationDate());
         reservation.setSeatNumber(dto.getSeatNumber());
         reservation.setPrice(dto.getPrice());
-
+        flight.getReservations().add(reservation);
         return reservationRepository.save(reservation);
     }
 

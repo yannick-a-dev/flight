@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
-@Data
 @Table(name = "alert")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Alert {

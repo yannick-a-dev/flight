@@ -3,6 +3,7 @@ package com.flight.project_flight.controller;
 import com.flight.project_flight.dto.ReservationDto;
 import com.flight.project_flight.models.Reservation;
 import com.flight.project_flight.service.ReservationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +30,8 @@ public class ReservationController {
             @RequestBody ReservationDto dto) {
         dto.setFlightNumber(flightNumber);
         Reservation reservation = reservationService.createReservation(dto);
-        return ResponseEntity.ok(reservation);
+        return ResponseEntity.status(HttpStatus.CREATED).body(reservation);
     }
+
 }
 
