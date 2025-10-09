@@ -63,7 +63,7 @@ public class AlertService {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    @Retryable(value = {SerializationException.class}, maxAttempts = 3, backoff = @Backoff(delay = 2000))
+    @Retryable(retryFor = {SerializationException.class}, maxAttempts = 3, backoff = @Backoff(delay = 2000))
     public Alert createAlertForPassenger(Passenger passenger, Flight flight, LocalDateTime alertDate, String message, String severity) {
         MDC.put("passengerId", passenger != null ? passenger.getId().toString() : "unknown");
         try {
@@ -92,7 +92,7 @@ public class AlertService {
 
             return savedAlert;
         } finally {
-            MDC.clear(); // Toujours nettoyer le MDC après l'exécution
+            MDC.clear();
         }
     }
 
@@ -107,7 +107,6 @@ public class AlertService {
             });
         } catch (SerializationException e) {
             log.error("Serialization error", e);
-            // Stocker l'erreur dans un mécanisme de secours (ex: base de données, DLT)
         }
     }
 
@@ -119,21 +118,6 @@ public class AlertService {
         record.put("lastName", alertEvent.getLastName());
         return record;
     }
-
-//    private void fillRecordWithAlertEvent(GenericRecord record, AlertEvent alertEvent) {
-//        record.put(EMAIL_FIELD, Optional.ofNullable(alertEvent.getEmail()).orElse(""));
-//        record.put(PASSWORD_NUMBER_FIELD, Optional.ofNullable(alertEvent.getPasswordNumber()).orElse(""));
-//        record.put(FIRST_NAME_FIELD, Optional.ofNullable(alertEvent.getFirstName()).orElse(""));
-//        record.put(LAST_NAME_FIELD, Optional.ofNullable(alertEvent.getLastName()).orElse(""));
-//    }
-//
-//    private String safeToString(Object value) {
-//        if (value == null) {
-//            log.warn("Null value encountered for field. Returning 'N/A'.");
-//            return "N/A";
-//        }
-//        return value.toString();
-//    }
 
     private void validateInputs(Passenger passenger, Flight flight, LocalDateTime alertDate, String message, String severity) {
         if (passenger == null || flight == null || alertDate == null || message == null || severity == null) {

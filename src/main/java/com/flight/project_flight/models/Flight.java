@@ -39,6 +39,28 @@ public class Flight {
     @ToString.Exclude
     private List<Alert> alerts = new ArrayList<>();
 
+    public void addAlert(Alert alert) {
+        alerts.add(alert);
+        alert.setFlight(this); // lier l'enfant à l'entité parent
+    }
+
+    public void removeAlert(Alert alert) {
+        alerts.remove(alert);
+        alert.setFlight(null);
+    }
+
+    // Dans Flight.java
+    public void addReservation(Reservation reservation) {
+        reservations.add(reservation);
+        reservation.setFlight(this); // lier l'enfant au parent
+    }
+
+    public void removeReservation(Reservation reservation) {
+        reservations.remove(reservation);
+        reservation.setFlight(null);
+    }
+
+
     public String getFlightNumber() {
         return flightNumber;
     }
@@ -91,15 +113,9 @@ public class Flight {
         return reservations;
     }
 
-    public void setReservations(List<Reservation> reservations) {
-        this.reservations = reservations;
-    }
-
     public List<Alert> getAlerts() {
         return alerts;
     }
 
-    public void setAlerts(List<Alert> alerts) {
-        this.alerts = alerts;
-    }
+
 }

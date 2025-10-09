@@ -14,6 +14,8 @@ public class AlertDto {
     private Long passengerId;
     private String flightNumber;
 
+    private String ticketNumber;
+
     public String getMessage() {
         return message;
     }
@@ -60,5 +62,13 @@ public class AlertDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getTicketNumber() {
+        return ticketNumber;
+    }
+
+    public void setTicketNumber(String ticketNumber) {
+        this.ticketNumber = ticketNumber;
     }
 }

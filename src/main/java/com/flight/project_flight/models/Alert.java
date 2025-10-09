@@ -25,13 +25,10 @@ public class Alert {
 
     @NotBlank
     private String message;
-
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime alertDate;
-
     @NotNull
     private Severity severity;
-
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "passenger_id")
     @ToString.Exclude

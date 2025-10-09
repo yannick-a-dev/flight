@@ -1,6 +1,8 @@
 package com.flight.project_flight.service;
 
 import com.flight.project_flight.dto.ReservationDto;
+import com.flight.project_flight.exception.FlightNotFoundException;
+import com.flight.project_flight.exception.PassengerNotFoundException;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.models.Reservation;

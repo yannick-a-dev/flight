@@ -52,7 +52,7 @@ public class FlightController {
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/{flightNumber}")
+    @GetMapping("/{flightNumber:.+}")
     public ResponseEntity<FlightResponseDto> getFlightByNumber(@PathVariable String flightNumber) {
         try {
             Flight flight = flightService.getFlightByNumber(flightNumber); // à implémenter dans service
@@ -63,7 +63,7 @@ public class FlightController {
     }
 
 
-    @PutMapping("/{flightNumber}")
+    @PutMapping("/{flightNumber:.+}")
     public ResponseEntity<Flight> updateFlight(@PathVariable String flightNumber, @RequestBody FlightDto flightDto) {
         try {
             Flight updatedFlight = flightService.updateFlight(flightNumber, flightDto);
@@ -75,7 +75,7 @@ public class FlightController {
         }
     }
 
-    @DeleteMapping("/{flightNumber}")
+    @DeleteMapping("/{flightNumber:.+}")
     public ResponseEntity<Void> deleteFlight(@PathVariable String flightNumber) {
         try {
             flightService.deleteFlight(flightNumber);
