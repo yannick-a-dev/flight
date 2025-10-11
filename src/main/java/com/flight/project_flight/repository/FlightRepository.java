@@ -1,5 +1,6 @@
 package com.flight.project_flight.repository;
 
+import com.flight.project_flight.models.Airport;
 import com.flight.project_flight.models.Flight;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,4 +16,6 @@ public interface FlightRepository extends JpaRepository<Flight, String> {
 
     @Query("SELECT r.flight FROM Reservation r WHERE r.passenger.id = :passengerId")
     List<Flight> findFlightsByPassengerId(@Param("passengerId") Long passengerId);
+
+    List<Flight> findByDepartureAirportOrArrivalAirport(String departureCode, String arrivalCode);
 }

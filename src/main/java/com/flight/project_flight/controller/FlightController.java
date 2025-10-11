@@ -10,6 +10,7 @@ import com.flight.project_flight.service.FlightService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +42,7 @@ public class FlightController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
+
     @GetMapping
     public ResponseEntity<List<FlightResponseDto>> getAllFlights() {
         List<Flight> flights = flightService.getAllFlights();
@@ -61,7 +63,6 @@ public class FlightController {
             return ResponseEntity.notFound().build();
         }
     }
-
 
     @PutMapping("/{flightNumber:.+}")
     public ResponseEntity<Flight> updateFlight(@PathVariable String flightNumber, @RequestBody FlightDto flightDto) {

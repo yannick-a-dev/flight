@@ -50,9 +50,6 @@ public class AlertMapper {
     }
 
     public List<Alert> mapToAlerts(List<AlertDto> alertDtos, Flight flight) {
-        log.debug("Mapping {} AlertDto to Alert entities for flight: {}",
-                alertDtos != null ? alertDtos.size() : 0,
-                flight != null ? flight.getFlightNumber() : "null");
 
         return alertDtos.stream()
                 .map(dto -> {

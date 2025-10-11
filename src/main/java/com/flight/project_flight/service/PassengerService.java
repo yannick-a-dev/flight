@@ -74,15 +74,15 @@ public class PassengerService implements UserDetailsService {
     }
     @Transactional
     public Passenger registerPassenger(PassengerDTO passengerDTO) {
-        logger.debug("passengerDTO received: {}", passengerDTO);
+
         checkEmailUniqueness(passengerDTO);
-        logger.debug("Raw password from request: {}", passengerDTO.getPassword());
+
         String hashedPassword = encodePassword(passengerDTO.getPassword());
-        logger.debug("Hashed password: {}", hashedPassword);
+
         Passenger passenger = createPassenger(passengerDTO, hashedPassword);
-        logger.info("Passenger to be saved: {}", passenger);
+
         Passenger savedPassenger = passengerRepository.save(passenger);
-        logger.info("Passenger saved successfully: {}", savedPassenger);
+
         return savedPassenger;
     }
 
@@ -98,7 +98,6 @@ public class PassengerService implements UserDetailsService {
         if (password == null || password.isEmpty()) {
             throw new RuntimeException("Password is null or empty");
         }
-        logger.debug("Encoding password for user: {}", password);
         String hashedPassword = passwordEncoder.encode(password);
         if (hashedPassword == null || hashedPassword.isEmpty()) {
             throw new RuntimeException("Password encoding failed");

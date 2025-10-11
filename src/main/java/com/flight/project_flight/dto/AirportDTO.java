@@ -119,6 +119,15 @@ public class AirportDTO {
     public void setTimezone(String timezone) {
         this.timezone = timezone;
     }
+
+    public Boolean getActive() {
+        return isActive;
+    }
+
+    public void setActive(Boolean active) {
+        isActive = active;
+    }
+
 }
 
 

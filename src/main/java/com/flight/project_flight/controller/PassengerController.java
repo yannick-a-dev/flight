@@ -1,6 +1,6 @@
 package com.flight.project_flight.controller;
 
-import com.flight.project_flight.dto.AlertDto;
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.flight.project_flight.dto.PassengerDTO;
 import com.flight.project_flight.mapper.PassengerMapper;
 import com.flight.project_flight.models.Alert;
@@ -64,6 +64,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDTOs);
     }
 
+
     @GetMapping("/names")
     public ResponseEntity<List<String>> getPassengerNames() {
         List<String> names = passengerService.getPassengerNames();
@@ -79,6 +80,7 @@ public class PassengerController {
                             .body(null);
                 });
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePassenger(@PathVariable Long id, @RequestBody PassengerDTO passengerDTO) {
@@ -146,6 +148,7 @@ public class PassengerController {
                 })
                 .collect(Collectors.toList());
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePassenger(@PathVariable Long id) {

@@ -1,15 +1,19 @@
 package com.flight.project_flight.controller;
 
+import com.flight.project_flight.dto.AirlineDTO;
 import com.flight.project_flight.dto.AirportDTO;
+import com.flight.project_flight.dto.FlightDto;
 import com.flight.project_flight.mapper.AirportMapper;
 import com.flight.project_flight.models.Airport;
 import com.flight.project_flight.service.AirportService;
 import com.flight.project_flight.service.FlightService;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/airports")
@@ -23,51 +27,131 @@ public class AirportController {
         this.flightService = flightService;
     }
 
+    // ========================
+    // Endpoints statiques/fixes
+    // ========================
+
+//    @GetMapping
+//    public ResponseEntity<List<AirportDTO>> getAllAirports() {
+//        List<AirportDTO> airportDTOs = airportService.getAllAirports();
+//        return ResponseEntity.ok(airportDTOs);
+//    }
     @GetMapping
-    public ResponseEntity<List<AirportDTO>> getAllAirports() {
-        List<AirportDTO> airportDTOs = airportService.getAllAirports();
-        return ResponseEntity.ok(airportDTOs);
+    public ResponseEntity<?> getAirports(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size,
+            @RequestParam(required = false, defaultValue = "id") String sortBy,
+            @RequestParam(required = false) String action
+    ) {
+
+        if ("stats".equalsIgnoreCase(action)) {
+            Map<String, Object> stats = airportService.getAirportStatistics();
+            return ResponseEntity.ok(stats);
+        }
+
+
+        if ("paginated".equalsIgnoreCase(action)) {
+            List<String> allowedSortFields = List.of(
+                "id", "name", "location", "code", "capacity", "city", "country",
+                "international", "isActive", "terminalInfo", "timezone"
+            );
+            if (!allowedSortFields.contains(sortBy)) sortBy = "id";
+
+            Page<AirportDTO> airportsPage = airportService.getPaginatedAirports(page, size, sortBy);
+            return ResponseEntity.ok(airportsPage);
+        }
+
+        if ("search".equalsIgnoreCase(action)) {
+            List<String> allowedSortFields = List.of(
+                "id", "name", "location", "code", "capacity", "city", "country",
+                "international", "isActive", "terminalInfo", "timezone"
+            );
+            if (!allowedSortFields.contains(sortBy)) sortBy = "id";
+
+            Page<AirportDTO> searchPage = airportService.searchAirportsPaginated(
+                name, city, country, code, page, size, sortBy
+            );
+            return ResponseEntity.ok(searchPage);
+        }
+
+        List<AirportDTO> airports = airportService.searchAirports(name, city, country, code);
+        return ResponseEntity.ok(airports);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<AirportDTO> getAirportById(@PathVariable Long id) {
-        Airport airport = airportService.getAirportById(id);
 
+
+    @PostMapping("/sync")
+    public ResponseEntity<String> syncAirportsFromExternalAPI() {
+        airportService.syncWithExternalAPI();
+        return ResponseEntity.ok("Airports synchronized successfully!");
+    }
+
+    @PostMapping
+    public ResponseEntity<AirportDTO> createAirport(@RequestBody AirportDTO airportDTO) {
+        Airport airport = AirportMapper.toEntity(airportDTO);
+        Airport savedAirport = airportService.addAirport(airport);
+        AirportDTO createdAirportDTO = AirportMapper.toDTO(savedAirport);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdAirportDTO);
+    }
+
+    // ========================
+    // Endpoints dynamiques (/id)
+    // ========================
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AirportDTO> getAirportById(@PathVariable String id) {
+        if (!id.matches("\\d+")) {
+            return ResponseEntity.badRequest().build();
+        }
+        Airport airport = airportService.getAirportById(Long.valueOf(id));
         if (airport != null) {
-            AirportDTO airportDTO = AirportMapper.toDTO(airport);
-            return ResponseEntity.ok(airportDTO);
+            return ResponseEntity.ok(AirportMapper.toDTO(airport));
         }
         return ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/{id}/flights")
+    public ResponseEntity<List<FlightDto>> getFlightsByAirport(@PathVariable String id) {
+        if (!id.matches("\\d+")) {
+            return ResponseEntity.badRequest().build();
+        }
+        List<FlightDto> flights = flightService.getFlightsByAirport(Long.valueOf(id));
+        return ResponseEntity.ok(flights);
+    }
 
-    @PostMapping
-    public ResponseEntity<AirportDTO> createAirport(@RequestBody AirportDTO airportDTO) {
-        Airport airport = AirportMapper.toEntity(airportDTO, flightService);
-        Airport savedAirport = airportService.addAirport(airport);
-        AirportDTO createdAirportDTO = AirportMapper.toDTO(savedAirport);
-        return ResponseEntity.status(201).body(createdAirportDTO);
+    @GetMapping("/{id}/airlines")
+    public ResponseEntity<List<AirlineDTO>> getAirlinesByAirport(@PathVariable String id) {
+        if (!id.matches("\\d+")) {
+            return ResponseEntity.badRequest().build();
+        }
+        List<AirlineDTO> airlines = airportService.getAirlinesByAirport(Long.valueOf(id));
+        return ResponseEntity.ok(airlines);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<AirportDTO> updateAirport(@PathVariable Long id, @RequestBody AirportDTO airportDTO) {
-        Airport airportDetails = AirportMapper.toEntity(airportDTO, flightService);
+        Airport airportDetails = AirportMapper.toEntity(airportDTO);
         Airport updatedAirport = airportService.updateAirport(id, airportDetails);
         AirportDTO updatedAirportDTO = AirportMapper.toDTO(updatedAirport);
         return ResponseEntity.ok(updatedAirportDTO);
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteAirport(@PathVariable Long id) {
         try {
-            airportService.deleteAirport(id); // Suppression dans le service
+            airportService.deleteAirport(id);
             String message = "Airport with ID " + id + " has been successfully deleted.";
-            return ResponseEntity.ok(message); // Réponse au format String
+            return ResponseEntity.ok(message);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Airport not found with ID " + id);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting airport with ID " + id + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error deleting airport with ID " + id + ": " + e.getMessage());
         }
     }
 
 }
-

@@ -9,11 +9,13 @@ import com.flight.project_flight.exception.FlightNotFoundException;
 import com.flight.project_flight.exception.InvalidFlightDataException;
 import com.flight.project_flight.mapper.AlertMapper;
 import com.flight.project_flight.mapper.ReservationMapper;
+import com.flight.project_flight.models.Airport;
 import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
 import com.flight.project_flight.models.Reservation;
 import com.flight.project_flight.repository.AirportRepository;
 import com.flight.project_flight.repository.FlightRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -144,12 +146,6 @@ public class FlightService {
                 existingFlight.addReservation(res);
             }
         }
-
-        log.debug("Flight {} updated: alerts={}, reservations={}",
-                existingFlight.getFlightNumber(),
-                existingFlight.getAlerts().size(),
-                existingFlight.getReservations().size());
-
         // 4. Sauvegarde
         return flightRepository.save(existingFlight);
     }
@@ -168,4 +164,47 @@ public class FlightService {
                 .orElseThrow(() -> new FlightNotFoundException("Flight not found with number: " + flightNumber));
     }
 
+    public List<FlightDto> getFlightsByAirport(Long airportId) {
+        // 1️⃣ Récupérer l'aéroport pour obtenir son code IATA
+        Airport airport = airportRepository.findById(airportId)
+                .orElseThrow(() -> new EntityNotFoundException("Airport not found with ID: " + airportId));
+
+        String airportCode = airport.getCode();
+
+        // 2️⃣ Récupérer les vols où l'aéroport est départ ou arrivée
+        List<Flight> flights = flightRepository.findByDepartureAirportOrArrivalAirport(airportCode, airportCode);
+
+        // 3️⃣ Mapper les vols en FlightDto
+        return flights.stream()
+                .map(flight -> {
+                    List<ReservationDto> reservations = flight.getReservations().stream()
+                            .map(reservationMapper::toDto)
+                            .collect(Collectors.toList());
+
+                    List<AlertDto> alerts = flight.getAlerts().stream()
+                            .map(alertMapper::toDto)
+                            .collect(Collectors.toList());
+
+                    var dto = getFlightDto(flight, reservations, alerts);
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private static FlightDto getFlightDto(Flight flight, List<ReservationDto> reservations, List<AlertDto> alerts) {
+        FlightDto dto = new FlightDto();
+        dto.setFlightNumber(flight.getFlightNumber());
+        dto.setDepartureTime(flight.getDepartureTime());
+        dto.setArrivalTime(flight.getArrivalTime());
+        dto.setDepartureAirport(flight.getDepartureAirport());
+        dto.setArrivalAirport(flight.getArrivalAirport());
+        dto.setStatus(flight.getStatus().name());
+        dto.setReservations(reservations);
+        dto.setAlerts(alerts);
+        return dto;
+    }
+
+    public long countAllFlights() {
+        return flightRepository.count();
+    }
 }

@@ -6,6 +6,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,7 +35,6 @@ public class TicketController {
         List<Ticket> tickets = ticketService.getAllTickets();
         return ResponseEntity.ok(tickets);
     }
-
     @DeleteMapping("/{ticketNumber}")
     public ResponseEntity<Void> deleteTicket(@PathVariable String ticketNumber) {
         // Check if the ticket with the provided ticketNumber exists
@@ -45,6 +45,7 @@ public class TicketController {
             return ResponseEntity.notFound().build();
         }
     }
+
     @GetMapping("/passenger/{passengerId}")
     public ResponseEntity<List<Ticket>> getTicketsByPassenger(@PathVariable Long passengerId) {
         try {

@@ -66,7 +66,6 @@ public class Airport {
     @OneToMany(mappedBy = "arrivalAirport", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Flight> arrivalFlights = new HashSet<>();
 
-    // Constructeur par défaut
     public Airport() {
     }
 
@@ -189,4 +188,5 @@ public class Airport {
     public void setArrivalFlights(Set<Flight> arrivalFlights) {
         this.arrivalFlights = arrivalFlights;
     }
+
 }

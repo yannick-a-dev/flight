@@ -60,6 +60,25 @@ public class Flight {
         reservation.setFlight(null);
     }
 
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations.clear();
+        if (reservations != null) {
+            for (Reservation r : reservations) {
+                addReservation(r); // pour lier le flight à la reservation
+            }
+        }
+    }
+
+    public void setAlerts(List<Alert> alerts) {
+        this.alerts.clear();
+        if (alerts != null) {
+            for (Alert a : alerts) {
+                addAlert(a); // pour lier le flight à l'alerte
+            }
+        }
+    }
+
+
 
     public String getFlightNumber() {
         return flightNumber;
