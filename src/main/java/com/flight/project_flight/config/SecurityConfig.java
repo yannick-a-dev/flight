@@ -33,7 +33,7 @@ public class SecurityConfig {
 
                         // Endpoints publics
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
                         // Airports - GET
                         .requestMatchers(HttpMethod.GET, "/api/airports/paginated").permitAll()

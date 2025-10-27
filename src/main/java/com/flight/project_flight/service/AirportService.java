@@ -111,29 +111,34 @@ public class AirportService {
         airportRepository.delete(airport);
     }
 
-    public List<AirportDTO> searchAirports(String name, String city, String country, String code) {
-        try {
-            List<Airport> airports = airportRepository.findAll((root, query, cb) -> {
-                List<Predicate> predicates = new ArrayList<>();
-                if (name != null && !name.isEmpty()) {
+    public List<AirportDTO> searchAirports(String name, String city, String country, String code, boolean exactNameMatch) {
+        List<Airport> airports = airportRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (name != null && !name.isEmpty()) {
+                if (exactNameMatch) {
+                    predicates.add(cb.equal(cb.lower(root.get("name")), name.toLowerCase()));
+                } else {
                     predicates.add(cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
                 }
-                if (city != null && !city.isEmpty()) {
-                    predicates.add(cb.like(cb.lower(root.get("city")), "%" + city.toLowerCase() + "%"));
-                }
-                if (country != null && !country.isEmpty()) {
-                    predicates.add(cb.like(cb.lower(root.get("country")), "%" + country.toLowerCase() + "%"));
-                }
-                if (code != null && !code.isEmpty()) {
-                    predicates.add(cb.equal(cb.upper(root.get("code")), code.toUpperCase()));
-                }
-                return cb.and(predicates.toArray(new Predicate[0]));
-            });
-            return airports.stream().map(AirportMapper::toDTO).toList();
-        } catch (Exception e) {
-            e.printStackTrace(); // log exact error
-            throw new RuntimeException("Erreur lors de la recherche des aéroports", e);
-        }
+            }
+
+            if (city != null && !city.isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("city")), "%" + city.toLowerCase() + "%"));
+            }
+
+            if (country != null && !country.isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("country")), "%" + country.toLowerCase() + "%"));
+            }
+
+            if (code != null && !code.isEmpty()) {
+                predicates.add(cb.equal(cb.upper(root.get("code")), code.toUpperCase()));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        });
+
+        return airports.stream().map(AirportMapper::toDTO).toList();
     }
 
 

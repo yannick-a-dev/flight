@@ -61,9 +61,10 @@ spring:
 
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+    url: /v3/api-docs
 
 jwt:
   secret: ${JWT_SECRET:votre-secret}

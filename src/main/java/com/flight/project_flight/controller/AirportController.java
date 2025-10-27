@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.Map;
 
@@ -27,15 +28,6 @@ public class AirportController {
         this.flightService = flightService;
     }
 
-    // ========================
-    // Endpoints statiques/fixes
-    // ========================
-
-//    @GetMapping
-//    public ResponseEntity<List<AirportDTO>> getAllAirports() {
-//        List<AirportDTO> airportDTOs = airportService.getAllAirports();
-//        return ResponseEntity.ok(airportDTOs);
-//    }
     @GetMapping
     public ResponseEntity<?> getAirports(
             @RequestParam(required = false) String name,
@@ -48,16 +40,17 @@ public class AirportController {
             @RequestParam(required = false) String action
     ) {
 
+        // --- Stats ---
         if ("stats".equalsIgnoreCase(action)) {
             Map<String, Object> stats = airportService.getAirportStatistics();
             return ResponseEntity.ok(stats);
         }
 
-
+        // --- Pagination ---
         if ("paginated".equalsIgnoreCase(action)) {
             List<String> allowedSortFields = List.of(
-                "id", "name", "location", "code", "capacity", "city", "country",
-                "international", "isActive", "terminalInfo", "timezone"
+                    "id", "name", "location", "code", "capacity", "city", "country",
+                    "international", "isActive", "terminalInfo", "timezone"
             );
             if (!allowedSortFields.contains(sortBy)) sortBy = "id";
 
@@ -65,29 +58,27 @@ public class AirportController {
             return ResponseEntity.ok(airportsPage);
         }
 
+        // --- Recherche ---
         if ("search".equalsIgnoreCase(action)) {
-            List<String> allowedSortFields = List.of(
-                "id", "name", "location", "code", "capacity", "city", "country",
-                "international", "isActive", "terminalInfo", "timezone"
-            );
-            if (!allowedSortFields.contains(sortBy)) sortBy = "id";
-
-            Page<AirportDTO> searchPage = airportService.searchAirportsPaginated(
-                name, city, country, code, page, size, sortBy
-            );
-            return ResponseEntity.ok(searchPage);
+            List<AirportDTO> results = airportService.searchAirports(name, city, country, code, true);
+            return ResponseEntity.ok(results);
         }
 
-        List<AirportDTO> airports = airportService.searchAirports(name, city, country, code);
+        // --- Par défaut, tout renvoyer ---
+        List<AirportDTO> airports = airportService.getAllAirports();
         return ResponseEntity.ok(airports);
     }
 
-
-
     @PostMapping("/sync")
     public ResponseEntity<String> syncAirportsFromExternalAPI() {
-        airportService.syncWithExternalAPI();
-        return ResponseEntity.ok("Airports synchronized successfully!");
+        try {
+            airportService.syncWithExternalAPI();
+            return ResponseEntity.ok("Airports synchronized successfully!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur lors de la synchronisation : " + e.getMessage());
+        }
     }
 
     @PostMapping
@@ -97,10 +88,6 @@ public class AirportController {
         AirportDTO createdAirportDTO = AirportMapper.toDTO(savedAirport);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAirportDTO);
     }
-
-    // ========================
-    // Endpoints dynamiques (/id)
-    // ========================
 
     @GetMapping("/{id}")
     public ResponseEntity<AirportDTO> getAirportById(@PathVariable String id) {
