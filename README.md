@@ -59,6 +59,15 @@ Swagger UI : http://localhost:8083/swagger-ui.html
 
 API Docs (OpenAPI) : http://localhost:8083/v3/api-docs
 
+### 📧 Accès aux emails
+
+- **Mailhog UI (local)** : [http://localhost:8025](http://localhost:8025)
+  > Permet de visualiser tous les emails envoyés depuis l’application en local, sans envoyer de vrais emails.
+
+- **Mailtrap / Mail.io (optionnel pour tests)** : [https://mailtrap.io/](https://mailtrap.io/)
+  > Serveur SMTP simulé pour tester l’envoi d’emails dans un environnement de staging ou test.
+
+
 ### Installation & Lancement
 
 ```bash
