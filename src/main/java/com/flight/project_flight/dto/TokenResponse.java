@@ -5,10 +5,15 @@ public class TokenResponse {
     private String refreshToken;
     private long expiresIn;
 
-    public TokenResponse(String accessToken, String refreshToken, String expiresIn) {
+    public TokenResponse(String accessToken, String refreshToken, long expiresIn) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
-        this.expiresIn = Long.parseLong(expiresIn);
+        this.expiresIn = expiresIn;
+    }
+
+    public TokenResponse(String accessToken, String refreshToken, String expiresIn) {
+        this(accessToken, refreshToken,
+                (expiresIn != null && !expiresIn.isBlank()) ? Long.parseLong(expiresIn) : 0L);
     }
 
     public String getAccessToken() {

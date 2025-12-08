@@ -35,12 +35,22 @@ public class ReservationMapper {
 
     public ReservationDto toDto(Reservation reservation) {
         ReservationDto reservationDto = new ReservationDto();
+        reservationDto.setId(reservation.getId());
         reservationDto.setReservationDate(reservation.getReservationDate());
         reservationDto.setSeatNumber(reservation.getSeatNumber());
         reservationDto.setPrice(reservation.getPrice());
-        reservationDto.setPassengerId(reservation.getPassenger().getId());
+
+        if (reservation.getPassenger() != null) {
+            reservationDto.setPassengerId(reservation.getPassenger().getId());
+        }
+
+        if (reservation.getFlight() != null) {
+            reservationDto.setFlightNumber(reservation.getFlight().getFlightNumber());
+        }
+
         return reservationDto;
     }
+
 
     public List<Reservation> mapToReservations(List<ReservationDto> reservationDtos, Flight flight) {
         return reservationDtos.stream()

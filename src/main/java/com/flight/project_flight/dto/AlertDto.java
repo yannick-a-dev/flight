@@ -6,12 +6,15 @@ import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import java.time.LocalDateTime;
 
 public class AlertDto {
+    private Long id;
     private String message;
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime alertDate;
     private String severity;
     private Long passengerId;
     private String flightNumber;
+
+    private String ticketNumber;
 
     public String getMessage() {
         return message;
@@ -51,5 +54,21 @@ public class AlertDto {
 
     public void setFlightNumber(String flightNumber) {
         this.flightNumber = flightNumber;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTicketNumber() {
+        return ticketNumber;
+    }
+
+    public void setTicketNumber(String ticketNumber) {
+        this.ticketNumber = ticketNumber;
     }
 }

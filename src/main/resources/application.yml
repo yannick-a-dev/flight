@@ -1,82 +1,94 @@
 server:
-  port: 8081
-
+  port: 8080
 spring:
   application:
-    name: flight-management-service # Nom de l'application
+    name: flight-management-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/flights?useUnicode=true&characterEncoding=UTF-8
+    url: jdbc:mysql://mysql-flight:3306/flights?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
     username: user
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       pool-name: HikariCP
+      initialization-fail-timeout: 60000
 
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
 
-kafka:
-  bootstrap-servers: localhost:9092
-  consumer:
-    group-id: flight-service-group
-    auto-offset-reset: earliest
-    enable-auto-commit: false
-    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-  producer:
-    client-id: flight-management-service-producer
-    retries: 5
-    acks: all
-    retry-backoff-ms: 100
-    key-serializer: org.apache.kafka.common.serialization.StringSerializer
-    value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-  template:
-    default-topic: flights-topic
-  topic:
-    flight-events: flights-topic
+  mail:
+    host: ${SPRING_MAIL_HOST:mailhog}
+    port: ${SPRING_MAIL_PORT:1025}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      client-id: flight-management-service-producer
+      retries: 5
+      acks: all
+      retry-backoff-ms: 100
+      key-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        max.request.size: 200000000
+        schema.registry.url: ${SCHEMA_REGISTRY_URL}
+        request.timeout.ms: 120000
+        metadata.fetch.timeout.ms: 120000
+        metric.reporters: ""
+        metrics.recording.level: NONE
+    template:
+      default-topic: event-placed
 
+    topic:
+      flight-events: event-placed
 
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+    url: /v3/api-docs
 
 jwt:
-  secret: "kC7g8VvePaKZ6FSrkL0O3pNEakjWwRRU8GJ0aM1cyYwpWs22cD/sGfVrmF84l9ptIPlv6Fh7xn2OxAQgZ9yH/JhKLmpeXhWwXyXhUq6uW/k="
+  secret: ${JWT_SECRET:votre-secret}
   accessToken:
-    expiration: 900000
+    expiration: ${JWT_ACCESS_EXP:900000}
   refreshToken:
-    expiration: 604800000
+    expiration: ${JWT_REFRESH_EXP:604800000}
 
 cors:
-  allowed-origins: http://localhost:4200
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   allowed-methods: GET, POST, PUT, DELETE, OPTIONS
   allowed-headers: Authorization, Content-Type
 
 logging:
   level:
     root: INFO
-    org.springframework.kafka: DEBUG # Niveau de log pour Kafka
+    org.springframework.kafka: DEBUG
+    org.apache.kafka.clients.NetworkClient: DEBUG
 
 management:
   endpoints:
     web:
       exposure:
-        include: "*" # Expose tous les endpoints pour l'administration
+        include: "*"
   endpoint:
     health:
-      show-details: always # Affiche les détails sur les points de santé
-
-
-
+      show-details: always

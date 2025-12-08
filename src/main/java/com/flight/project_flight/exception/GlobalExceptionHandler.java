@@ -42,5 +42,10 @@ public class GlobalExceptionHandler {
         // Retourner un message d'erreur spécifique
         return ex.getMessage();
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleValidationException(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
 }
 

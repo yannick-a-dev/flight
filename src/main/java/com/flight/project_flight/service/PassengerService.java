@@ -24,15 +24,16 @@ import java.util.stream.Collectors;
 
 @Service
 public class PassengerService implements UserDetailsService {
-    @Autowired
-    private  PassengerRepository passengerRepository;
+
+    private final  PassengerRepository passengerRepository;
     private final AuthService authService;
 
     private final PasswordEncoder passwordEncoder;
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
-    public PassengerService(@Lazy AuthService authService, PasswordEncoder passwordEncoder) {
+    public PassengerService(PassengerRepository passengerRepository, @Lazy AuthService authService, PasswordEncoder passwordEncoder) {
+        this.passengerRepository = passengerRepository;
         this.authService = authService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -47,12 +48,11 @@ public class PassengerService implements UserDetailsService {
     }
 
     public List<Passenger> getAllPassengers() {
-        return passengerRepository.findAll().stream()
-                .filter(passenger -> passenger.getEmail() != null && !passenger.getEmail().isEmpty())  // Filtrage des passagers avec un email non vide
-                .sorted(Comparator.comparing(Passenger::getId))  // Trie uniquement par ID de manière croissante
+        return passengerRepository.findAllWithReservationsAndFlights().stream()
+                .filter(passenger -> passenger.getEmail() != null && !passenger.getEmail().isEmpty())
+                .sorted(Comparator.comparing(Passenger::getId))
                 .collect(Collectors.toList());
     }
-
 
     public List<String> getPassengerNames() {
         return passengerRepository.findAll().stream()
@@ -74,15 +74,15 @@ public class PassengerService implements UserDetailsService {
     }
     @Transactional
     public Passenger registerPassenger(PassengerDTO passengerDTO) {
-        logger.debug("passengerDTO received: {}", passengerDTO);
+
         checkEmailUniqueness(passengerDTO);
-        logger.debug("Raw password from request: {}", passengerDTO.getPassword());
+
         String hashedPassword = encodePassword(passengerDTO.getPassword());
-        logger.debug("Hashed password: {}", hashedPassword);
+
         Passenger passenger = createPassenger(passengerDTO, hashedPassword);
-        logger.info("Passenger to be saved: {}", passenger);
+
         Passenger savedPassenger = passengerRepository.save(passenger);
-        logger.info("Passenger saved successfully: {}", savedPassenger);
+
         return savedPassenger;
     }
 
@@ -98,7 +98,6 @@ public class PassengerService implements UserDetailsService {
         if (password == null || password.isEmpty()) {
             throw new RuntimeException("Password is null or empty");
         }
-        logger.debug("Encoding password for user: {}", password);
         String hashedPassword = passwordEncoder.encode(password);
         if (hashedPassword == null || hashedPassword.isEmpty()) {
             throw new RuntimeException("Password encoding failed");
@@ -140,4 +139,9 @@ public class PassengerService implements UserDetailsService {
     public Passenger findById(Long id) {
         return passengerRepository.findById(id).orElseThrow(() -> new RuntimeException("Passenger not found"));
     }
+
+    public void deletePassenger(Passenger passenger) {
+        passengerRepository.delete(passenger);
+    }
+
 }

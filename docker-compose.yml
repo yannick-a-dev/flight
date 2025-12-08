@@ -1,42 +1,7 @@
 services:
-  # MySQL Flight Database
-  mysql-flight:
-    image: mysql:8.0
-    container_name: flight-db
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: root-password
-      MYSQL_DATABASE: flights
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-    volumes:
-      - db_data:/var/lib/mysql
-    networks:
-      - flight-network
-
-  # Backend Spring Boot Application
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: flight-backend
-    ports:
-      - "8083:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://flight-db:3306/flights?useUnicode=true&characterEncoding=UTF-8
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: broker:9092
-    depends_on:
-      - mysql-flight
-      - broker
-    networks:
-      - flight-network
-
-  # Zookeeper Service
+  # Zookeeper
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
+    image: confluentinc/cp-zookeeper:7.8.0
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -48,60 +13,94 @@ services:
 
   # Kafka Broker
   broker:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:7.8.0
     container_name: broker
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"
-      - "29092:29092"
+      - "9092:9092"    # accès depuis host
+      - "29092:29092"  # accès interne aux conteneurs
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     networks:
       - flight-network
 
-  # Kafka Schema Registry
+  # Schema Registry
   schema-registry:
-    image: confluentinc/cp-schema-registry:7.5.0
-    hostname: schema-registry
+    image: confluentinc/cp-schema-registry:7.8.0
     container_name: schema-registry
     depends_on:
       - broker
     ports:
-      - "8082:8081"
+      - "8081:8081"
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker:29092'
-      SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://broker:29092
+
     networks:
       - flight-network
 
-  # Kafka UI for monitoring and managing Kafka
-  kafka-ui:
-    container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - "8080:8080"
+
+  # Backend Spring Boot
+  flight-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flight-backend
     depends_on:
       - broker
       - schema-registry
+      - mysql-flight
+      - mailhog
+    ports:
+      - "8083:8080"
     environment:
-      KAFKA_CLUSTERS_NAME: local
-      KAFKA_CLUSTERS_BOOTSTRAPSERVERS: broker:29092
-      KAFKA_CLUSTERS_SCHEMAREGISTRY: http://schema-registry:8081
-      DYNAMIC_CONFIG_ENABLED: 'true'
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-flight:3306/flights?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: broker:29092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+      JWT_SECRET: "votre-secret"
     networks:
       - flight-network
 
-# Volume definition
-volumes:
-  db_data:
+  # MySQL
+  mysql-flight:
+    image: mysql:8.0
+    container_name: mysql-flight
+    environment:
+      MYSQL_ROOT_PASSWORD: root-password
+      MYSQL_DATABASE: flights
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    networks:
+      - flight-network
 
-# Network definition
+  # Mailhog
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - flight-network
+
 networks:
   flight-network:
-
+    driver: bridge

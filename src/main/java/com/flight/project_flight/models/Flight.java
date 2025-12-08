@@ -2,19 +2,23 @@ package com.flight.project_flight.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import com.flight.project_flight.enums.FlightStatus;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 @Entity
-@Data
 @Table(name = "flight")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "flightNumber")
 public class Flight {
     @Id
     private String flightNumber;
@@ -27,12 +31,54 @@ public class Flight {
     @Enumerated(EnumType.STRING)
     private FlightStatus status;
 
-    @OneToMany(mappedBy = "flight")
-    private List<Reservation> reservations;
+    @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<Reservation> reservations = new ArrayList<>();
 
-    @OneToMany(mappedBy = "flight")
-    @JsonBackReference
-    private List<Alert> alerts;
+    @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<Alert> alerts = new ArrayList<>();
+
+    public void addAlert(Alert alert) {
+        alerts.add(alert);
+        alert.setFlight(this); // lier l'enfant à l'entité parent
+    }
+
+    public void removeAlert(Alert alert) {
+        alerts.remove(alert);
+        alert.setFlight(null);
+    }
+
+    // Dans Flight.java
+    public void addReservation(Reservation reservation) {
+        reservations.add(reservation);
+        reservation.setFlight(this); // lier l'enfant au parent
+    }
+
+    public void removeReservation(Reservation reservation) {
+        reservations.remove(reservation);
+        reservation.setFlight(null);
+    }
+
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations.clear();
+        if (reservations != null) {
+            for (Reservation r : reservations) {
+                addReservation(r); // pour lier le flight à la reservation
+            }
+        }
+    }
+
+    public void setAlerts(List<Alert> alerts) {
+        this.alerts.clear();
+        if (alerts != null) {
+            for (Alert a : alerts) {
+                addAlert(a); // pour lier le flight à l'alerte
+            }
+        }
+    }
+
+
 
     public String getFlightNumber() {
         return flightNumber;
@@ -86,15 +132,9 @@ public class Flight {
         return reservations;
     }
 
-    public void setReservations(List<Reservation> reservations) {
-        this.reservations = reservations;
-    }
-
     public List<Alert> getAlerts() {
         return alerts;
     }
 
-    public void setAlerts(List<Alert> alerts) {
-        this.alerts = alerts;
-    }
+
 }

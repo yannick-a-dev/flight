@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "passenger")
-@Data
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Passenger implements UserDetails {
 
@@ -46,12 +45,13 @@ public class Passenger implements UserDetails {
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime dob;
 
-    @OneToMany(mappedBy = "passenger")
-    private List<Reservation> reservations;
+    @ToString.Exclude
+    @OneToMany(mappedBy = "passenger", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Reservation> reservations = new ArrayList<>();
 
-    @OneToMany(mappedBy = "passenger")
-    @JsonBackReference
-    private List<Alert> alerts;
+    @OneToMany(mappedBy = "passenger", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @ToString.Exclude
+    private List<Alert> alerts = new ArrayList<>();
 
     @NotBlank(message = "Password is required")
     private String password;
@@ -67,6 +67,21 @@ public class Passenger implements UserDetails {
     )
     @JsonIdentityReference(alwaysAsId = true)
     private List<Role> roles = new ArrayList<>();
+
+
+    @Override
+    public String toString() {
+        return "Passenger{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", phone='" + phone + '\'' +
+                ", passportNumber='" + passportNumber + '\'' +
+                ", password='" + password + '\'' +
+                ", enabled=" + enabled +
+                '}';
+    }
 
     public Passenger(Long id, String firstName, String lastName, String email, String hashedPassword, String phone, String passportNumber, LocalDateTime dob) {
         this.id = id;
@@ -102,7 +117,6 @@ public class Passenger implements UserDetails {
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
     }
-
     @Override
     public String getUsername() {
         return email;
@@ -134,7 +148,7 @@ public class Passenger implements UserDetails {
     }
 
     public void setPassword(String password) {
-        this.password = new BCryptPasswordEncoder().encode(password);
+        this.password = password;
     }
 
     public Long getId() {

@@ -17,7 +17,7 @@ public class ReservationDto {
     @NotNull(message = "Passenger ID cannot be null")
     private Long passengerId;
     @NotNull(message = "Flight ID cannot be null")
-    private Long flightId;
+    private String flightNumber;
 
     public Long getId() {
         return id;
@@ -59,11 +59,11 @@ public class ReservationDto {
         this.passengerId = passengerId;
     }
 
-    public Long getFlightId() {
-        return flightId;
+    public String getFlightNumber() {
+        return flightNumber;
     }
 
-    public void setFlightId(Long flightId) {
-        this.flightId = flightId;
+    public void setFlightNumber(String flightNumber) {
+        this.flightNumber = flightNumber;
     }
 }

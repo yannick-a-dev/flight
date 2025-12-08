@@ -10,21 +10,22 @@ public class AirportMapper {
         return new AirportDTO(airport);
     }
 
-    public static Airport toEntity(AirportDTO airportDTO, FlightService flightService) {
+    public static Airport toEntity(AirportDTO dto) {
         Airport airport = new Airport();
-        airport.setId(airportDTO.getId());
-        airport.setName(airportDTO.getName());
-        airport.setLocation(airportDTO.getLocation());
-        airport.setCode(airportDTO.getCode());
-        airport.setCapacity(airportDTO.getCapacity());
-        airport.setCity(airportDTO.getCity());
-        airport.setCountry(airportDTO.getCountry());
-        airport.setInternational(airportDTO.getInternational());
-        airport.setActive(airportDTO.getIsActive());
-        airport.setTerminalInfo(airportDTO.getTerminalInfo());
-        airport.setTimezone(airportDTO.getTimezone());
+        airport.setName(dto.getName() != null ? dto.getName() : "Unknown");
+        airport.setCode(dto.getCode() != null ? dto.getCode() : "UNKNOWN");
+        airport.setLocation(dto.getLocation() != null ? dto.getLocation() : "Unknown");
+        airport.setCapacity(dto.getCapacity() != null ? dto.getCapacity() : 0);
+        airport.setCity(dto.getCity() != null ? dto.getCity() : "Unknown");
+        airport.setCountry(dto.getCountry() != null ? dto.getCountry() : "Unknown");
+        airport.setInternational(dto.getInternational() != null ? dto.getInternational() : false);
+        airport.setActive(dto.getIsActive() != null ? dto.getIsActive() : false);
+        airport.setTerminalInfo(dto.getTerminalInfo() != null ? dto.getTerminalInfo() : "No information available");
+        airport.setTimezone(dto.getTimezone() != null ? dto.getTimezone() : "Unknown");
         return airport;
     }
+
 }
+
 
 

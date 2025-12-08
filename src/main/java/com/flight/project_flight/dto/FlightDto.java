@@ -16,7 +16,6 @@ public class FlightDto {
     private String flightNumber;
 
     @NotNull(message = "Departure date cannot be null")
-    @PastOrPresent(message = "Departure date must be in the past or present")
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime departureTime;
 
@@ -34,8 +33,7 @@ public class FlightDto {
     private String arrivalAirport;
 
     @NotNull(message = "Status cannot be null")
-    @Size(min = 1, max = 50, message = "Status must be between 1 and 50 characters")
-    private FlightStatus status;
+    private String status;
 
     @NotNull(message = "Reservations list cannot be null")
     private List<ReservationDto> reservations;
@@ -83,14 +81,6 @@ public class FlightDto {
         this.arrivalAirport = arrivalAirport;
     }
 
-    public FlightStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(FlightStatus status) {
-        this.status = status;
-    }
-
     public List<ReservationDto> getReservations() {
         return reservations;
     }
@@ -107,5 +97,12 @@ public class FlightDto {
         this.alerts = alerts;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }
 

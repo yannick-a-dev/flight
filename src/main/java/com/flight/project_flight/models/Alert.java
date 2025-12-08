@@ -1,8 +1,6 @@
 package com.flight.project_flight.models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import com.flight.project_flight.enums.Severity;
@@ -12,13 +10,14 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
-@Data
 @Table(name = "alert")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Alert {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,26 +25,23 @@ public class Alert {
 
     @NotBlank
     private String message;
-
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime alertDate;
-
     @NotNull
     private Severity severity;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "passenger_id")
-    @JsonBackReference("alert-passenger")
+    @ToString.Exclude
     private Passenger passenger;
 
     @ManyToOne
     @JoinColumn(name = "flight_id")
-    @JsonBackReference("alert-flight")
+    @ToString.Exclude
     private Flight flight;
 
     @ManyToOne
     @JoinColumn(name = "ticket_id")
-    @JsonBackReference("ticket-alerts")
+    @ToString.Exclude
     private Ticket ticket;
 
     public Alert() {}
@@ -57,6 +53,23 @@ public class Alert {
         this.passenger = passenger;
         this.flight = flight;
         this.ticket = ticket;
+    }
+
+    public Alert(Passenger passenger, Flight flight, String message, Severity severityEnum, LocalDateTime alertDate) {
+        this.passenger = passenger;
+        this.flight = flight;
+        this.message = message;
+        this.severity = severityEnum;
+        this.alertDate = alertDate;
+    }
+
+    @Override
+    public String toString() {
+        return "Alert{" +
+                "id=" + id +
+                ", message='" + message + '\'' +
+                ", severity=" + severity +
+                '}';
     }
 
     public Long getId() {
