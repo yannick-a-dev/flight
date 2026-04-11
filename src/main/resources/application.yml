@@ -5,9 +5,9 @@ spring:
     name: flight-management-service
 
   datasource:
-    url: jdbc:mysql://mysql-flight:3306/flights?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
-    username: user
-    password: password
+    url: jdbc:mysql://localhost:3306/flights?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: root-password
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       pool-name: HikariCP
@@ -16,7 +16,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -26,16 +26,19 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
 
   mail:
-    host: ${SPRING_MAIL_HOST:mailhog}
-    port: ${SPRING_MAIL_PORT:1025}
-    username: ${SPRING_MAIL_USERNAME:}
-    password: ${SPRING_MAIL_PASSWORD:}
+    host: localhost
+    port: 1025
+    username: ""
+    password: ""
     properties:
       mail:
         smtp:
           auth: false
           starttls:
             enable: false
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
@@ -83,6 +86,8 @@ logging:
     root: INFO
     org.springframework.kafka: DEBUG
     org.apache.kafka.clients.NetworkClient: DEBUG
+    org.springframework.mail: DEBUG
+    jakarta.mail: DEBUG
 
 management:
   endpoints:

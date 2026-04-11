@@ -34,16 +34,13 @@ public class FlightMapper {
         flight.setArrivalAirport(flightDto.getArrivalAirport());
         flight.setStatus(FlightStatus.valueOf(flightDto.getStatus()));
 
-        // 🔥 MAPPING DES RESERVATIONS
         if (flightDto.getReservations() != null && !flightDto.getReservations().isEmpty()) {
             List<Reservation> reservations = reservationMapper.mapToReservations(flightDto.getReservations(), flight);
-            flight.setReservations(reservations);
+            reservations.forEach(flight::addReservation);
         }
-
-        // 🔥 MAPPING DES ALERTES
         if (flightDto.getAlerts() != null && !flightDto.getAlerts().isEmpty()) {
             List<Alert> alerts = alertMapper.mapToAlerts(flightDto.getAlerts(), flight);
-            flight.setAlerts(alerts);
+            alerts.forEach(flight::addAlert);
         }
 
         return flight;

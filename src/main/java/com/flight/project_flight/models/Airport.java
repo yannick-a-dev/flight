@@ -27,6 +27,7 @@ public class Airport {
 
     @NotNull(message = "Code is mandatory")
     @Size(min = 1, message = "Code must not be empty")
+    @Column(unique = true, nullable = false)
     private String code;
 
     @NotNull
@@ -65,6 +66,9 @@ public class Airport {
     @JsonIgnore
     @OneToMany(mappedBy = "arrivalAirport", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Flight> arrivalFlights = new HashSet<>();
+
+    @ManyToMany(mappedBy = "airports")
+    private Set<Airline> airlines = new HashSet<>();
 
     public Airport() {
     }
@@ -189,4 +193,11 @@ public class Airport {
         this.arrivalFlights = arrivalFlights;
     }
 
+    public Set<Airline> getAirlines() {
+        return airlines;
+    }
+
+    public void setAirlines(Set<Airline> airlines) {
+        this.airlines = airlines;
+    }
 }

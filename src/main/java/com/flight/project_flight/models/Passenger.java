@@ -1,21 +1,21 @@
 package com.flight.project_flight.models;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,35 +68,8 @@ public class Passenger implements UserDetails {
     @JsonIdentityReference(alwaysAsId = true)
     private List<Role> roles = new ArrayList<>();
 
-
-    @Override
-    public String toString() {
-        return "Passenger{" +
-                "id=" + id +
-                ", email='" + email + '\'' +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", phone='" + phone + '\'' +
-                ", passportNumber='" + passportNumber + '\'' +
-                ", password='" + password + '\'' +
-                ", enabled=" + enabled +
-                '}';
-    }
-
-    public Passenger(Long id, String firstName, String lastName, String email, String hashedPassword, String phone, String passportNumber, LocalDateTime dob) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.password = hashedPassword;
-        this.phone = phone;
-        this.passportNumber = passportNumber;
-        this.dob = dob;
-    }
-
     public Passenger() {}
-
-    public Passenger(Long id, String email, String firstName, String lastName, String phone, String passportNumber, LocalDateTime dob, List<Reservation> reservations, List<Alert> alerts, String password, boolean enabled, List<Role> roles) {
+    public Passenger(Long id, String email, String firstName, String lastName, String phone, String passportNumber, LocalDateTime dob, List<Reservation> reservations, List<Alert> alerts, String password, Boolean enabled, List<Role> roles) {
         this.id = id;
         this.email = email;
         this.firstName = firstName;
@@ -111,6 +84,9 @@ public class Passenger implements UserDetails {
         this.roles = roles;
     }
 
+    public Passenger(Object o, String firstName, String lastName, String email, String hashedPassword, String phone, String passportNumber, LocalDateTime dob) {
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
@@ -120,11 +96,6 @@ public class Passenger implements UserDetails {
     @Override
     public String getUsername() {
         return email;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
     }
 
     @Override
@@ -145,6 +116,10 @@ public class Passenger implements UserDetails {
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+    @Override
+    public String getPassword() {
+        return password;
     }
 
     public void setPassword(String password) {

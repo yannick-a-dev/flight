@@ -17,8 +17,13 @@ public interface AirportRepository extends JpaRepository<Airport, Long>, JpaSpec
 
     Optional<Airport> findByCode(String code);
 
-    @Query("SELECT COUNT(a) FROM Airport a WHERE SIZE(a.flights) > 0")
+    @Query("""
+    SELECT COUNT(DISTINCT a)
+    FROM Airport a
+    LEFT JOIN a.departureFlights df
+    LEFT JOIN a.arrivalFlights af
+    WHERE df IS NOT NULL OR af IS NOT NULL
+""")
     long countAirportsWithFlights();
-
-    Airport findByIataCode(String iataCode);
+    boolean existsByCodeIgnoreCase(String code);
 }

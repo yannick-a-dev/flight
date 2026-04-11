@@ -2,6 +2,9 @@ package com.flight.project_flight.models;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "airlines")
 public class Airline {
@@ -14,6 +17,13 @@ public class Airline {
 
     @Column(length = 5, unique = true)
     private String code;
+    @ManyToMany
+    @JoinTable(
+            name = "airline_airports",
+            joinColumns = @JoinColumn(name = "airline_id"),
+            inverseJoinColumns = @JoinColumn(name = "airport_id")
+    )
+    private Set<Airport> airports = new HashSet<>();
 
     public Airline() {}
 
@@ -44,5 +54,13 @@ public class Airline {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public Set<Airport> getAirports() {
+        return airports;
+    }
+
+    public void setAirports(Set<Airport> airports) {
+        this.airports = airports;
     }
 }

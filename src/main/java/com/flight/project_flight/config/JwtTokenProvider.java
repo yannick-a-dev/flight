@@ -20,13 +20,10 @@ public class JwtTokenProvider {
     @Value("${jwt.accessToken.expiration}")
     private long jwtExpiration;
 
-    // Extraire le nom d'utilisateur du token JWT
     public String getUsernameFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
         return claims.getSubject();
     }
-
-    // Valider le token JWT
     public boolean validateToken(String token) {
         try {
             Claims claims = getClaimsFromToken(token);
@@ -35,16 +32,12 @@ public class JwtTokenProvider {
             return false;
         }
     }
-
-    // Obtenir les informations des claims (données internes) du token
     private Claims getClaimsFromToken(String token) {
         return Jwts.parser()
                 .setSigningKey(jwtSecret)
                 .parseClaimsJws(token)
                 .getBody();
     }
-
-    // Générer un token JWT à partir du nom d'utilisateur
     public String generateToken(UserDetails userDetails) {
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + jwtExpiration);

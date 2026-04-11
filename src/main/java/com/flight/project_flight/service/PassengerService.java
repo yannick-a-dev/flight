@@ -2,11 +2,11 @@ package com.flight.project_flight.service;
 
 import com.flight.project_flight.dto.PassengerDTO;
 import com.flight.project_flight.exception.EmailAlreadyExistsException;
+import com.flight.project_flight.mapper.AlertMapper;
 import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.repository.PassengerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -27,14 +28,15 @@ public class PassengerService implements UserDetailsService {
 
     private final  PassengerRepository passengerRepository;
     private final AuthService authService;
-
+    private final AlertMapper alertMapper;
     private final PasswordEncoder passwordEncoder;
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
-    public PassengerService(PassengerRepository passengerRepository, @Lazy AuthService authService, PasswordEncoder passwordEncoder) {
+    public PassengerService(PassengerRepository passengerRepository, @Lazy AuthService authService, @Lazy AlertMapper alertMapper, PasswordEncoder passwordEncoder) {
         this.passengerRepository = passengerRepository;
         this.authService = authService;
+        this.alertMapper = alertMapper;
         this.passwordEncoder = passwordEncoder;
     }
     public Passenger savePassenger(Passenger passenger) {
@@ -72,18 +74,28 @@ public class PassengerService implements UserDetailsService {
         }
         return false;
     }
+
     @Transactional
     public Passenger registerPassenger(PassengerDTO passengerDTO) {
 
+        // 1️⃣ Vérification unicité email
         checkEmailUniqueness(passengerDTO);
 
+        // 2️⃣ Encodage mot de passe
         String hashedPassword = encodePassword(passengerDTO.getPassword());
 
+        // 3️⃣ Création Passenger
         Passenger passenger = createPassenger(passengerDTO, hashedPassword);
 
-        Passenger savedPassenger = passengerRepository.save(passenger);
+        // 4️⃣ Mapping alerts si présent
+        if (passengerDTO.getAlerts() != null) {
+            passenger.setAlerts(passengerDTO.getAlerts().stream()
+                    .map(alertDto -> alertMapper.toEntity(alertDto))
+                    .collect(Collectors.toList()));
+        }
 
-        return savedPassenger;
+        // 5️⃣ Persist
+        return passengerRepository.save(passenger);
     }
 
 
@@ -94,6 +106,7 @@ public class PassengerService implements UserDetailsService {
             throw new EmailAlreadyExistsException("Passenger with this email already exists");
         }
     }
+
     private String encodePassword(String password) {
         if (password == null || password.isEmpty()) {
             throw new RuntimeException("Password is null or empty");
@@ -105,23 +118,22 @@ public class PassengerService implements UserDetailsService {
         return hashedPassword;
     }
 
-
     private Passenger createPassenger(PassengerDTO passengerDTO, String hashedPassword) {
         Passenger passenger = new Passenger(
-                null,
+                null, // id
+                passengerDTO.getEmail(),
                 passengerDTO.getFirstName(),
                 passengerDTO.getLastName(),
-                passengerDTO.getEmail(),
-                hashedPassword,
                 passengerDTO.getPhone(),
                 passengerDTO.getPassportNumber(),
-                passengerDTO.getDob()
+                passengerDTO.getDob(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                hashedPassword,
+                passengerDTO.getEnabled() != null ? passengerDTO.getEnabled() : true,
+                new ArrayList<>()
         );
-        if (passengerDTO.getEnabled() == null) {
-            passenger.setEnabled(true);
-        } else {
-            passenger.setEnabled(passengerDTO.getEnabled());
-        }
+
         return passenger;
     }
 

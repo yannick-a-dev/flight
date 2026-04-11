@@ -9,6 +9,7 @@ import com.flight.project_flight.repository.PassengerRepository;
 import com.flight.project_flight.service.PassengerService;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,6 +54,8 @@ public class ReservationMapper {
 
 
     public List<Reservation> mapToReservations(List<ReservationDto> reservationDtos, Flight flight) {
+        if (reservationDtos == null) return Collections.emptyList();
+
         return reservationDtos.stream()
                 .map(dto -> {
                     Reservation reservation = new Reservation();
@@ -60,13 +63,15 @@ public class ReservationMapper {
                     reservation.setReservationDate(dto.getReservationDate());
                     reservation.setSeatNumber(dto.getSeatNumber());
                     reservation.setPrice(dto.getPrice());
-                    // Extraire le Passenger de l'Optional
-                    Passenger passenger = passengerRepository.findById(dto.getPassengerId())
-                            .orElseThrow(() -> new PassengerNotFoundException("Passenger not found with id: " + dto.getPassengerId()));
-                    reservation.setPassenger(passenger);
                     reservation.setFlight(flight);
+
+                    if (dto.getPassengerId() != null) {
+                        passengerRepository.findById(dto.getPassengerId()).ifPresent(reservation::setPassenger);
+                    }
+
                     return reservation;
                 })
                 .collect(Collectors.toList());
     }
+
 }

@@ -13,19 +13,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 @Slf4j
 public class AlertMapper {
-
-    private final TicketRepository ticketRepository;
     private final PassengerService passengerService;
     private final PassengerRepository passengerRepository;
 
-    public AlertMapper(TicketRepository ticketRepository, PassengerService passengerService, PassengerRepository passengerRepository) {
-        this.ticketRepository = ticketRepository;
+    public AlertMapper(PassengerService passengerService, PassengerRepository passengerRepository) {
         this.passengerService = passengerService;
         this.passengerRepository = passengerRepository;
     }
@@ -50,6 +48,7 @@ public class AlertMapper {
     }
 
     public List<Alert> mapToAlerts(List<AlertDto> alertDtos, Flight flight) {
+        if (alertDtos == null) return Collections.emptyList();
 
         return alertDtos.stream()
                 .map(dto -> {
@@ -57,25 +56,12 @@ public class AlertMapper {
                     alert.setMessage(dto.getMessage());
                     alert.setAlertDate(dto.getAlertDate());
                     alert.setSeverity(Severity.valueOf(dto.getSeverity()));
-
-                    // Flight attaché
                     alert.setFlight(flight);
 
-                    // Passenger attaché si présent
                     if (dto.getPassengerId() != null) {
-                        Passenger passenger = passengerRepository.findById(dto.getPassengerId())
-                                .orElseThrow(() -> new RuntimeException(
-                                        "Passenger not found with ID: " + dto.getPassengerId()));
-                        alert.setPassenger(passenger);
+                        passengerRepository.findById(dto.getPassengerId()).ifPresent(alert::setPassenger);
+                        // si Passenger absent, on ignore au lieu de lancer exception
                     }
-
-                    // Ticket attaché si présent (ne pas toucher ticket.getAlerts())
-//                    if (dto.getTicketNumber() != null) {
-//                        Ticket ticket = ticketRepository.findById(dto.getTicketNumber())
-//                                .orElseThrow(() -> new RuntimeException(
-//                                        "Ticket not found with number: " + dto.getTicketNumber()));
-//                        alert.setTicket(ticket);
-//                    }
 
                     return alert;
                 })
@@ -86,8 +72,8 @@ public class AlertMapper {
         AlertDto dto = new AlertDto();
         dto.setId(alert.getId());
         dto.setMessage(alert.getMessage());
-        dto.setAlertDate(alert.getAlertDate() != null ? alert.getAlertDate() : LocalDateTime.now()); // ✅ fallback
-        dto.setSeverity(alert.getSeverity() != null ? alert.getSeverity().name() : "LOW"); // ✅ fallback
+        dto.setAlertDate(alert.getAlertDate() != null ? alert.getAlertDate() : LocalDateTime.now());
+        dto.setSeverity(alert.getSeverity() != null ? alert.getSeverity().name() : "LOW");
         dto.setPassengerId(alert.getPassenger() != null ? alert.getPassenger().getId() : null);
         dto.setFlightNumber(alert.getFlight() != null ? alert.getFlight().getFlightNumber() : null);
         return dto;

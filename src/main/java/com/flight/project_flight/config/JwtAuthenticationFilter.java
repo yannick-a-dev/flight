@@ -19,7 +19,7 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtTokenProvider jwtTokenProvider; // Service pour manipuler et valider les JWT
+    private final JwtTokenProvider jwtTokenProvider;
     @Autowired
     @Lazy
     private PassengerService passengerService;
@@ -29,37 +29,48 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        // 1. Extraire le JWT de l'en-tête Authorization
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
+
+        String path = request.getRequestURI();
+
+        // 🔹 Laisser passer les endpoints publics
+        if (path.startsWith("/auth/") ||
+                path.startsWith("/swagger-ui/") ||
+                path.startsWith("/v3/api-docs/") ||
+                path.startsWith("/api/flights/") ||
+                path.startsWith("/api/alerts/") ||
+                path.startsWith("/api/airports/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         String token = getJwtFromRequest(request);
 
-        // 2. Valider le JWT et extraire les informations de l'utilisateur
         if (token != null && jwtTokenProvider.validateToken(token)) {
             String username = jwtTokenProvider.getUsernameFromToken(token);
 
-            // 3. Authentifier l'utilisateur
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Créer un objet d'authentification avec les informations extraites du JWT
                 UserDetails userDetails = passengerService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
-                );
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // 4. Mettre l'authentification dans le contexte de sécurité
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
 
-        // Passer la requête à la chaîne de filtres suivante
         chain.doFilter(request, response);
     }
 
-    // Méthode pour extraire le token JWT de l'en-tête Authorization
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7); // Retirer "Bearer " du début du token
+            return bearerToken.substring(7);
         }
         return null;
     }

@@ -92,18 +92,17 @@ public class FlightService {
     public Optional<Flight> getFlightByFlightNumber(String flightNumber) {
         return flightRepository.findByFlightNumber(flightNumber);
     }
-
+    @Transactional
     public Flight updateFlight(String flightNumber, FlightDto flightDto) {
-        // 1. Find the existing flight by its flight number
         Flight existingFlight = flightRepository.findByFlightNumber(flightNumber)
                 .orElseThrow(() -> new FlightNotFoundException(flightNumber));
 
-        // 2. Validation des dates
+        // Validation dates
         if (flightDto.getDepartureTime().isAfter(flightDto.getArrivalTime())) {
             throw new InvalidFlightDataException("Departure time cannot be after arrival time.");
         }
 
-        // 3. Mise à jour des informations de base
+        // Mise à jour des infos de base
         existingFlight.setDepartureTime(flightDto.getDepartureTime());
         existingFlight.setArrivalTime(flightDto.getArrivalTime());
         existingFlight.setDepartureAirport(flightDto.getDepartureAirport());
@@ -116,37 +115,19 @@ public class FlightService {
         }
 
         // --- ALERTS ---
-        List<Alert> existingAlerts = existingFlight.getAlerts();
-        Iterator<Alert> alertIterator = existingAlerts.iterator();
-        while (alertIterator.hasNext()) {
-            Alert alert = alertIterator.next();
-            alertIterator.remove();   // supprime de la collection
-            alert.setFlight(null);    // rompt la relation
-        }
-
+        existingFlight.getAlerts().clear();
         if (flightDto.getAlerts() != null) {
             List<Alert> mappedAlerts = alertMapper.mapToAlerts(flightDto.getAlerts(), existingFlight);
-            for (Alert alert : mappedAlerts) {
-                existingFlight.addAlert(alert);
-            }
+            existingFlight.getAlerts().addAll(mappedAlerts);
         }
 
         // --- RESERVATIONS ---
-        List<Reservation> existingReservations = existingFlight.getReservations();
-        Iterator<Reservation> resIterator = existingReservations.iterator();
-        while (resIterator.hasNext()) {
-            Reservation res = resIterator.next();
-            resIterator.remove();
-            res.setFlight(null);
-        }
-
+        existingFlight.getReservations().clear();
         if (flightDto.getReservations() != null) {
             List<Reservation> mappedReservations = reservationMapper.mapToReservations(flightDto.getReservations(), existingFlight);
-            for (Reservation res : mappedReservations) {
-                existingFlight.addReservation(res);
-            }
+            existingFlight.getReservations().addAll(mappedReservations);
         }
-        // 4. Sauvegarde
+
         return flightRepository.save(existingFlight);
     }
 
