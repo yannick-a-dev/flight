@@ -84,8 +84,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root-password
       MYSQL_DATABASE: flights
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
     ports:
       - "3306:3306"
     networks:

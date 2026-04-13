@@ -2,6 +2,7 @@ package com.flight.project_flight.service;
 
 import com.flight.project_flight.dto.AirlineDTO;
 import com.flight.project_flight.dto.AirportDTO;
+import com.flight.project_flight.exception.AirportCodeAlreadyExistsException;
 import com.flight.project_flight.external.ExternalAPIClient;
 import com.flight.project_flight.mapper.AirportMapper;
 import com.flight.project_flight.models.Airline;
@@ -10,11 +11,13 @@ import com.flight.project_flight.repository.AirlineRepository;
 import com.flight.project_flight.repository.AirportRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
 import jakarta.validation.Validator;
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,13 +36,14 @@ public class AirportService {
     private final AirlineRepository airlineRepository;
 
     private final ExternalAPIClient externalAPIClient;
-    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+    private final Validator validator;
 
-    public AirportService(FlightService flightService, AirportRepository airportRepository, AirlineRepository airlineRepository, ExternalAPIClient externalAPIClient) {
+    public AirportService(FlightService flightService, AirportRepository airportRepository, AirlineRepository airlineRepository, ExternalAPIClient externalAPIClient, Validator validator) {
         this.flightService = flightService;
         this.airportRepository = airportRepository;
         this.airlineRepository = airlineRepository;
         this.externalAPIClient = externalAPIClient;
+        this.validator = validator;
     }
 
     public List<AirportDTO> getAllAirports() {
@@ -58,16 +62,39 @@ public class AirportService {
         return airportRepository.findByName(name);
     }
 
+    @Transactional
     public Airport addAirport(Airport airport) {
         Set<ConstraintViolation<Airport>> violations = validator.validate(airport);
         if (!violations.isEmpty()) {
             StringBuilder sb = new StringBuilder();
-            for (ConstraintViolation<Airport> violation : violations) {
-                sb.append(violation.getMessage()).append("\n");
+            for (ConstraintViolation<Airport> v : violations) {
+                sb.append(v.getMessage()).append("\n");
             }
-            throw new IllegalArgumentException("Validation failed:\n" + sb.toString());
+            throw new IllegalArgumentException("Validation failed:\n" + sb);
         }
-        return airportRepository.save(airport);
+        String code = airport.getCode();
+        if (code == null || code.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le code de l'aéroport ne peut pas être vide.");
+        }
+        code = code.trim().toUpperCase();
+        airport.setCode(code);
+        if (airportRepository.existsByCodeIgnoreCase(code)) {
+            throw new AirportCodeAlreadyExistsException(code);
+        }
+        try {
+            return airportRepository.save(airport);
+        } catch (DataIntegrityViolationException ex) {
+            if (ex.getCause() instanceof ConstraintViolationException cve) {
+                if (cve.getConstraintName() != null && cve.getConstraintName().contains("uk_airport_code")) {
+                    throw new AirportCodeAlreadyExistsException(code);
+                }
+            }
+            if (ex.getMessage() != null && ex.getMessage().contains("uk_airport_code")) {
+                throw new AirportCodeAlreadyExistsException(code);
+            }
+
+            throw ex;
+        }
     }
 
     public Page<AirportDTO> searchAirportsPaginated(String name, String city, String country, String code, int page, int size, String sortBy) {
@@ -163,33 +190,39 @@ public class AirportService {
     }
 
     public void syncWithExternalAPI() {
-        List<AirportDTO> externalAirports = externalAPIClient.fetchAirports();
+        // ⚡ Simuler les données externes
+        List<AirportDTO> externalAirports = List.of(
+                new AirportDTO("JFK", "John F Kennedy", "New York", "USA", 50000, true, true, "T1", "EST"),
+                new AirportDTO("LHR", "Heathrow", "London", "UK", 40000, true, true, "T2", "GMT"),
+                new AirportDTO("CDG", "Charles de Gaulle", "Paris", "France", 45000, true, true, "T3", "CET")
+        );
 
         for (AirportDTO dto : externalAirports) {
             Optional<Airport> existingOpt = airportRepository.findByCode(dto.getCode());
 
             if (existingOpt.isPresent()) {
-                // Extraire l'objet Airport de l'Optional
-                Airport existing = existingOpt.get();
-                existing.setName(dto.getName());
-                existing.setCity(dto.getCity());
-                existing.setCountry(dto.getCountry());
-                existing.setLocation(dto.getLocation());
-                existing.setCapacity(dto.getCapacity() != null ? dto.getCapacity() : 0);
-                existing.setInternational(dto.getInternational() != null ? dto.getInternational() : false);
-                existing.setActive(dto.getIsActive() != null ? dto.getIsActive() : false);
-                existing.setTerminalInfo(dto.getTerminalInfo() != null ? dto.getTerminalInfo() : "No information available");
-                existing.setTimezone(dto.getTimezone() != null ? dto.getTimezone() : "Unknown");
+                var existing = getAirport(dto, existingOpt);
 
                 airportRepository.save(existing);
-
             } else {
-                // Nouveau airport
                 airportRepository.save(AirportMapper.toEntity(dto));
             }
         }
     }
 
+    private static Airport getAirport(AirportDTO dto, Optional<Airport> existingOpt) {
+        Airport existing = existingOpt.get();
+        existing.setName(dto.getName());
+        existing.setCity(dto.getCity());
+        existing.setCountry(dto.getCountry());
+        existing.setLocation(dto.getLocation());
+        existing.setCapacity(dto.getCapacity() != null ? dto.getCapacity() : 0);
+        existing.setInternational(dto.getInternational() != null ? dto.getInternational() : false);
+        existing.setActive(dto.getIsActive() != null ? dto.getIsActive() : false);
+        existing.setTerminalInfo(dto.getTerminalInfo() != null ? dto.getTerminalInfo() : "No information available");
+        existing.setTimezone(dto.getTimezone() != null ? dto.getTimezone() : "Unknown");
+        return existing;
+    }
 
     public List<AirlineDTO> getAirlinesByAirport(Long airportId) {
         Airport airport = airportRepository.findById(airportId)

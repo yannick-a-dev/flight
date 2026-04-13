@@ -27,17 +27,14 @@ public class PassengerController {
     private final FlightService flightService;
     private final AlertService alertService;
     private final AlertConverter alertConverter;
-
-    private final ReservationService reservationService;
     private final PasswordEncoder passwordEncoder;
 
-    public PassengerController(PassengerMapper passengerMapper, PassengerService passengerService, FlightService flightService, AlertService alertService, AlertConverter alertConverter, ReservationService reservationService, PasswordEncoder passwordEncoder) {
+    public PassengerController(PassengerMapper passengerMapper, PassengerService passengerService, FlightService flightService, AlertService alertService, AlertConverter alertConverter, PasswordEncoder passwordEncoder) {
         this.passengerMapper = passengerMapper;
         this.passengerService = passengerService;
         this.flightService = flightService;
         this.alertService = alertService;
         this.alertConverter = alertConverter;
-        this.reservationService = reservationService;
         this.passwordEncoder = passwordEncoder;
     }
 

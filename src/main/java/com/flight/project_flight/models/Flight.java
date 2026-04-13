@@ -1,33 +1,33 @@
 package com.flight.project_flight.models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import com.flight.project_flight.enums.FlightStatus;
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.ToString;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
 @Table(name = "flight")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "flightNumber")
 public class Flight {
+
     @Id
     private String flightNumber;
+
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime departureTime;
+
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime arrivalTime;
+
     private String departureAirport;
     private String arrivalAirport;
+
     @Enumerated(EnumType.STRING)
     private FlightStatus status;
 
@@ -39,9 +39,10 @@ public class Flight {
     @ToString.Exclude
     private List<Alert> alerts = new ArrayList<>();
 
+    // ---------- ALERTS ----------
     public void addAlert(Alert alert) {
         alerts.add(alert);
-        alert.setFlight(this); // lier l'enfant à l'entité parent
+        alert.setFlight(this);
     }
 
     public void removeAlert(Alert alert) {
@@ -49,10 +50,10 @@ public class Flight {
         alert.setFlight(null);
     }
 
-    // Dans Flight.java
+    // ---------- RESERVATIONS ----------
     public void addReservation(Reservation reservation) {
         reservations.add(reservation);
-        reservation.setFlight(this); // lier l'enfant au parent
+        reservation.setFlight(this);
     }
 
     public void removeReservation(Reservation reservation) {
@@ -60,26 +61,7 @@ public class Flight {
         reservation.setFlight(null);
     }
 
-    public void setReservations(List<Reservation> reservations) {
-        this.reservations.clear();
-        if (reservations != null) {
-            for (Reservation r : reservations) {
-                addReservation(r); // pour lier le flight à la reservation
-            }
-        }
-    }
-
-    public void setAlerts(List<Alert> alerts) {
-        this.alerts.clear();
-        if (alerts != null) {
-            for (Alert a : alerts) {
-                addAlert(a); // pour lier le flight à l'alerte
-            }
-        }
-    }
-
-
-
+    // ---------- GETTERS / SETTERS ----------
     public String getFlightNumber() {
         return flightNumber;
     }
@@ -135,6 +117,4 @@ public class Flight {
     public List<Alert> getAlerts() {
         return alerts;
     }
-
-
 }

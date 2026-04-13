@@ -2,12 +2,14 @@ package com.flight.project_flight.controller;
 
 import com.flight.project_flight.config.JwtService;
 import com.flight.project_flight.dto.*;
+import com.flight.project_flight.exception.EmailAlreadyExistsException;
 import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.service.*;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.ConstraintViolation;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/auth")
@@ -117,13 +120,26 @@ public class AuthenticationController {
 
     @PostMapping(value = "/register", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> registerPassenger(@Valid @RequestBody PassengerDTO passengerDTO) {
-        if (passengerDTO.getPassword() == null || passengerDTO.getPassword().isEmpty()) {
+        try {
+            Passenger savedPassenger = passengerService.registerPassenger(passengerDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedPassenger);
+
+        } catch (EmailAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse("Conflict", e.getMessage()));
+
+        } catch (ConstraintViolationException e) {
+            String details = e.getConstraintViolations().stream()
+                    .map(ConstraintViolation::getMessage)
+                    .collect(Collectors.joining("; "));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("Bad Request", "Password is required"));
+                    .body(new ErrorResponse("Bad Request", details));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Internal Server Error", "Erreur interne du serveur"));
         }
-        Passenger savedPassenger = passengerService.registerPassenger(passengerDTO);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(savedPassenger);
     }
 
     @PostMapping("/refresh")

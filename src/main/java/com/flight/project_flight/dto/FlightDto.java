@@ -1,5 +1,6 @@
 package com.flight.project_flight.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import com.flight.project_flight.enums.FlightStatus;
@@ -16,12 +17,12 @@ public class FlightDto {
     private String flightNumber;
 
     @NotNull(message = "Departure date cannot be null")
-    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime departureTime;
 
     @NotNull(message = "Arrival date cannot be null")
     @Future(message = "Arrival date must be in the future")
-    @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime arrivalTime;
 
     @NotNull(message = "Departure airport cannot be null")

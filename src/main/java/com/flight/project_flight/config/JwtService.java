@@ -34,7 +34,6 @@ public class JwtService {
         return Keys.secretKeyFor(SignatureAlgorithm.HS512);
     }
 
-    // **Générer un token d'accès**
     public String generateAccessToken(String username) {
         logger.info("Generating access token for username: {}", username);
         return Jwts.builder()
@@ -45,7 +44,6 @@ public class JwtService {
                 .compact();
     }
 
-    // **Générer un token de rafraîchissement**
     public String generateRefreshToken(String username) {
         logger.info("Generating refresh token for username: {}", username);
         return Jwts.builder()
@@ -56,13 +54,11 @@ public class JwtService {
                 .compact();
     }
 
-    // **Extraire le username à partir du token**
     public String extractUsername(String token) {
         logger.debug("Extracting username from token");
         return extractClaim(token, Claims::getSubject);
     }
 
-    // **Extraire une réclamation spécifique**
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
@@ -77,7 +73,6 @@ public class JwtService {
                 .getBody();
     }
 
-    // **Valider un token**
     public boolean isTokenValid(String token, String username) {
         logger.debug("Validating token for username: {}", username);
         final String extractedUsername = extractUsername(token);
@@ -99,7 +94,6 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    // **Rafraîchir le token d'accès**
     public String refreshAccessToken(String refreshToken) {
         logger.info("Refreshing access token using refresh token: {}", refreshToken);
         if (isTokenExpired(refreshToken)) {

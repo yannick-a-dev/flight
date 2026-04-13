@@ -9,10 +9,8 @@ import java.io.IOException;
 
 public class AvroSchemaSerializer extends JsonSerializer<Schema> {
     public void serialize(Schema value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        // Logique de sérialisation du schéma Avro en JSON
         gen.writeStartObject();
         gen.writeStringField("type", value.getType().toString());
-        // Ajoutez ici d'autres champs nécessaires pour la sérialisation du schéma
         gen.writeEndObject();
     }
 }

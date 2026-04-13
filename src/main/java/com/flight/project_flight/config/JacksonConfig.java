@@ -15,8 +15,6 @@ public class JacksonConfig {
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-
-        // Définir un format personnalisé pour LocalDateTime
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
         JavaTimeModule module = new JavaTimeModule();
         module.addDeserializer(java.time.LocalDateTime.class, new LocalDateTimeDeserializer(formatter));

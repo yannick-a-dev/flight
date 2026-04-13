@@ -32,6 +32,9 @@ public class AirportDTO {
         this.timezone = airport.getTimezone();
     }
 
+    public AirportDTO(String jfk, String johnFKennedy, String newYork, String usa, int i, boolean b, boolean b1, String t1, String est) {
+    }
+
     public Long getId() {
         return id;
     }

@@ -13,7 +13,7 @@ public class AirportMapper {
     public static Airport toEntity(AirportDTO dto) {
         Airport airport = new Airport();
         airport.setName(dto.getName() != null ? dto.getName() : "Unknown");
-        airport.setCode(dto.getCode() != null ? dto.getCode() : "UNKNOWN");
+        airport.setCode(dto.getCode() != null ? dto.getCode().trim().toUpperCase() : "UNKNOWN");
         airport.setLocation(dto.getLocation() != null ? dto.getLocation() : "Unknown");
         airport.setCapacity(dto.getCapacity() != null ? dto.getCapacity() : 0);
         airport.setCity(dto.getCity() != null ? dto.getCity() : "Unknown");

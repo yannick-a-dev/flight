@@ -3,6 +3,7 @@ package com.flight.project_flight.controller;
 import com.flight.project_flight.dto.AirlineDTO;
 import com.flight.project_flight.dto.AirportDTO;
 import com.flight.project_flight.dto.FlightDto;
+import com.flight.project_flight.exception.AirportCodeAlreadyExistsException;
 import com.flight.project_flight.mapper.AirportMapper;
 import com.flight.project_flight.models.Airport;
 import com.flight.project_flight.service.AirportService;
@@ -19,7 +20,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/airports")
 public class AirportController {
-
     private final AirportService airportService;
     private final FlightService flightService;
 
@@ -39,14 +39,10 @@ public class AirportController {
             @RequestParam(required = false, defaultValue = "id") String sortBy,
             @RequestParam(required = false) String action
     ) {
-
-        // --- Stats ---
         if ("stats".equalsIgnoreCase(action)) {
             Map<String, Object> stats = airportService.getAirportStatistics();
             return ResponseEntity.ok(stats);
         }
-
-        // --- Pagination ---
         if ("paginated".equalsIgnoreCase(action)) {
             List<String> allowedSortFields = List.of(
                     "id", "name", "location", "code", "capacity", "city", "country",
@@ -57,14 +53,10 @@ public class AirportController {
             Page<AirportDTO> airportsPage = airportService.getPaginatedAirports(page, size, sortBy);
             return ResponseEntity.ok(airportsPage);
         }
-
-        // --- Recherche ---
         if ("search".equalsIgnoreCase(action)) {
             List<AirportDTO> results = airportService.searchAirports(name, city, country, code, true);
             return ResponseEntity.ok(results);
         }
-
-        // --- Par défaut, tout renvoyer ---
         List<AirportDTO> airports = airportService.getAllAirports();
         return ResponseEntity.ok(airports);
     }
@@ -140,5 +132,4 @@ public class AirportController {
                     .body("Error deleting airport with ID " + id + ": " + e.getMessage());
         }
     }
-
 }

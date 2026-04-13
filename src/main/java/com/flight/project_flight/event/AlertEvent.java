@@ -5,6 +5,7 @@
  */
 package com.flight.project_flight.event;
 
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.message.BinaryMessageEncoder;
@@ -13,10 +14,10 @@ import org.apache.avro.message.SchemaStore;
 
 @org.apache.avro.specific.AvroGenerated
 public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = -9065346065021613445L;
+  private static final long serialVersionUID = 1469631988524320907L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"AlertEvent\",\"namespace\":\"com.flight.project_flight.event\",\"fields\":[{\"name\":\"passwordNumber\",\"type\":\"string\"},{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"firstName\",\"type\":\"string\"},{\"name\":\"lastName\",\"type\":\"string\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"AlertEvent\",\"namespace\":\"com.flight.project_flight.event\",\"fields\":[{\"name\":\"passwordNumber\",\"type\":\"string\"},{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"firstName\",\"type\":\"string\"},{\"name\":\"lastName\",\"type\":\"string\"},{\"name\":\"alertId\",\"type\":[\"null\",\"long\"],\"default\":null},{\"name\":\"message\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"severity\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"alertDate\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"flightNumber\",\"type\":[\"null\",\"string\"],\"default\":null}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
@@ -76,6 +77,11 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
   private java.lang.CharSequence email;
   private java.lang.CharSequence firstName;
   private java.lang.CharSequence lastName;
+  private java.lang.Long alertId;
+  private java.lang.CharSequence message;
+  private java.lang.CharSequence severity;
+  private java.lang.CharSequence alertDate;
+  private java.lang.CharSequence flightNumber;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -90,12 +96,22 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
    * @param email The new value for email
    * @param firstName The new value for firstName
    * @param lastName The new value for lastName
+   * @param alertId The new value for alertId
+   * @param message The new value for message
+   * @param severity The new value for severity
+   * @param alertDate The new value for alertDate
+   * @param flightNumber The new value for flightNumber
    */
-  public AlertEvent(java.lang.CharSequence passwordNumber, java.lang.CharSequence email, java.lang.CharSequence firstName, java.lang.CharSequence lastName) {
+  public AlertEvent(java.lang.CharSequence passwordNumber, java.lang.CharSequence email, java.lang.CharSequence firstName, java.lang.CharSequence lastName, java.lang.Long alertId, java.lang.CharSequence message, java.lang.CharSequence severity, java.lang.CharSequence alertDate, java.lang.CharSequence flightNumber) {
     this.passwordNumber = passwordNumber;
     this.email = email;
     this.firstName = firstName;
     this.lastName = lastName;
+    this.alertId = alertId;
+    this.message = message;
+    this.severity = severity;
+    this.alertDate = alertDate;
+    this.flightNumber = flightNumber;
   }
 
   @Override
@@ -112,6 +128,11 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
     case 1: return email;
     case 2: return firstName;
     case 3: return lastName;
+    case 4: return alertId;
+    case 5: return message;
+    case 6: return severity;
+    case 7: return alertDate;
+    case 8: return flightNumber;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -125,6 +146,11 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
     case 1: email = (java.lang.CharSequence)value$; break;
     case 2: firstName = (java.lang.CharSequence)value$; break;
     case 3: lastName = (java.lang.CharSequence)value$; break;
+    case 4: alertId = (java.lang.Long)value$; break;
+    case 5: message = (java.lang.CharSequence)value$; break;
+    case 6: severity = (java.lang.CharSequence)value$; break;
+    case 7: alertDate = (java.lang.CharSequence)value$; break;
+    case 8: flightNumber = (java.lang.CharSequence)value$; break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -198,6 +224,91 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
   }
 
   /**
+   * Gets the value of the 'alertId' field.
+   * @return The value of the 'alertId' field.
+   */
+  public java.lang.Long getAlertId() {
+    return alertId;
+  }
+
+
+  /**
+   * Sets the value of the 'alertId' field.
+   * @param value the value to set.
+   */
+  public void setAlertId(java.lang.Long value) {
+    this.alertId = value;
+  }
+
+  /**
+   * Gets the value of the 'message' field.
+   * @return The value of the 'message' field.
+   */
+  public java.lang.CharSequence getMessage() {
+    return message;
+  }
+
+
+  /**
+   * Sets the value of the 'message' field.
+   * @param value the value to set.
+   */
+  public void setMessage(java.lang.CharSequence value) {
+    this.message = value;
+  }
+
+  /**
+   * Gets the value of the 'severity' field.
+   * @return The value of the 'severity' field.
+   */
+  public java.lang.CharSequence getSeverity() {
+    return severity;
+  }
+
+
+  /**
+   * Sets the value of the 'severity' field.
+   * @param value the value to set.
+   */
+  public void setSeverity(java.lang.CharSequence value) {
+    this.severity = value;
+  }
+
+  /**
+   * Gets the value of the 'alertDate' field.
+   * @return The value of the 'alertDate' field.
+   */
+  public java.lang.CharSequence getAlertDate() {
+    return alertDate;
+  }
+
+
+  /**
+   * Sets the value of the 'alertDate' field.
+   * @param value the value to set.
+   */
+  public void setAlertDate(java.lang.CharSequence value) {
+    this.alertDate = value;
+  }
+
+  /**
+   * Gets the value of the 'flightNumber' field.
+   * @return The value of the 'flightNumber' field.
+   */
+  public java.lang.CharSequence getFlightNumber() {
+    return flightNumber;
+  }
+
+
+  /**
+   * Sets the value of the 'flightNumber' field.
+   * @param value the value to set.
+   */
+  public void setFlightNumber(java.lang.CharSequence value) {
+    this.flightNumber = value;
+  }
+
+  /**
    * Creates a new AlertEvent RecordBuilder.
    * @return A new AlertEvent RecordBuilder
    */
@@ -242,6 +353,11 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
     private java.lang.CharSequence email;
     private java.lang.CharSequence firstName;
     private java.lang.CharSequence lastName;
+    private java.lang.Long alertId;
+    private java.lang.CharSequence message;
+    private java.lang.CharSequence severity;
+    private java.lang.CharSequence alertDate;
+    private java.lang.CharSequence flightNumber;
 
     /** Creates a new Builder */
     private Builder() {
@@ -270,6 +386,26 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
         this.lastName = data().deepCopy(fields()[3].schema(), other.lastName);
         fieldSetFlags()[3] = other.fieldSetFlags()[3];
       }
+      if (isValidValue(fields()[4], other.alertId)) {
+        this.alertId = data().deepCopy(fields()[4].schema(), other.alertId);
+        fieldSetFlags()[4] = other.fieldSetFlags()[4];
+      }
+      if (isValidValue(fields()[5], other.message)) {
+        this.message = data().deepCopy(fields()[5].schema(), other.message);
+        fieldSetFlags()[5] = other.fieldSetFlags()[5];
+      }
+      if (isValidValue(fields()[6], other.severity)) {
+        this.severity = data().deepCopy(fields()[6].schema(), other.severity);
+        fieldSetFlags()[6] = other.fieldSetFlags()[6];
+      }
+      if (isValidValue(fields()[7], other.alertDate)) {
+        this.alertDate = data().deepCopy(fields()[7].schema(), other.alertDate);
+        fieldSetFlags()[7] = other.fieldSetFlags()[7];
+      }
+      if (isValidValue(fields()[8], other.flightNumber)) {
+        this.flightNumber = data().deepCopy(fields()[8].schema(), other.flightNumber);
+        fieldSetFlags()[8] = other.fieldSetFlags()[8];
+      }
     }
 
     /**
@@ -293,6 +429,26 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
       if (isValidValue(fields()[3], other.lastName)) {
         this.lastName = data().deepCopy(fields()[3].schema(), other.lastName);
         fieldSetFlags()[3] = true;
+      }
+      if (isValidValue(fields()[4], other.alertId)) {
+        this.alertId = data().deepCopy(fields()[4].schema(), other.alertId);
+        fieldSetFlags()[4] = true;
+      }
+      if (isValidValue(fields()[5], other.message)) {
+        this.message = data().deepCopy(fields()[5].schema(), other.message);
+        fieldSetFlags()[5] = true;
+      }
+      if (isValidValue(fields()[6], other.severity)) {
+        this.severity = data().deepCopy(fields()[6].schema(), other.severity);
+        fieldSetFlags()[6] = true;
+      }
+      if (isValidValue(fields()[7], other.alertDate)) {
+        this.alertDate = data().deepCopy(fields()[7].schema(), other.alertDate);
+        fieldSetFlags()[7] = true;
+      }
+      if (isValidValue(fields()[8], other.flightNumber)) {
+        this.flightNumber = data().deepCopy(fields()[8].schema(), other.flightNumber);
+        fieldSetFlags()[8] = true;
       }
     }
 
@@ -456,6 +612,206 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
       return this;
     }
 
+    /**
+      * Gets the value of the 'alertId' field.
+      * @return The value.
+      */
+    public java.lang.Long getAlertId() {
+      return alertId;
+    }
+
+
+    /**
+      * Sets the value of the 'alertId' field.
+      * @param value The value of 'alertId'.
+      * @return This builder.
+      */
+    public com.flight.project_flight.event.AlertEvent.Builder setAlertId(java.lang.Long value) {
+      validate(fields()[4], value);
+      this.alertId = value;
+      fieldSetFlags()[4] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'alertId' field has been set.
+      * @return True if the 'alertId' field has been set, false otherwise.
+      */
+    public boolean hasAlertId() {
+      return fieldSetFlags()[4];
+    }
+
+
+    /**
+      * Clears the value of the 'alertId' field.
+      * @return This builder.
+      */
+    public com.flight.project_flight.event.AlertEvent.Builder clearAlertId() {
+      alertId = null;
+      fieldSetFlags()[4] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'message' field.
+      * @return The value.
+      */
+    public java.lang.CharSequence getMessage() {
+      return message;
+    }
+
+
+    /**
+      * Sets the value of the 'message' field.
+      * @param value The value of 'message'.
+      * @return This builder.
+      */
+    public com.flight.project_flight.event.AlertEvent.Builder setMessage(java.lang.CharSequence value) {
+      validate(fields()[5], value);
+      this.message = value;
+      fieldSetFlags()[5] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'message' field has been set.
+      * @return True if the 'message' field has been set, false otherwise.
+      */
+    public boolean hasMessage() {
+      return fieldSetFlags()[5];
+    }
+
+
+    /**
+      * Clears the value of the 'message' field.
+      * @return This builder.
+      */
+    public com.flight.project_flight.event.AlertEvent.Builder clearMessage() {
+      message = null;
+      fieldSetFlags()[5] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'severity' field.
+      * @return The value.
+      */
+    public java.lang.CharSequence getSeverity() {
+      return severity;
+    }
+
+
+    /**
+      * Sets the value of the 'severity' field.
+      * @param value The value of 'severity'.
+      * @return This builder.
+      */
+    public com.flight.project_flight.event.AlertEvent.Builder setSeverity(java.lang.CharSequence value) {
+      validate(fields()[6], value);
+      this.severity = value;
+      fieldSetFlags()[6] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'severity' field has been set.
+      * @return True if the 'severity' field has been set, false otherwise.
+      */
+    public boolean hasSeverity() {
+      return fieldSetFlags()[6];
+    }
+
+
+    /**
+      * Clears the value of the 'severity' field.
+      * @return This builder.
+      */
+    public com.flight.project_flight.event.AlertEvent.Builder clearSeverity() {
+      severity = null;
+      fieldSetFlags()[6] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'alertDate' field.
+      * @return The value.
+      */
+    public java.lang.CharSequence getAlertDate() {
+      return alertDate;
+    }
+
+
+    /**
+      * Sets the value of the 'alertDate' field.
+      * @param value The value of 'alertDate'.
+      * @return This builder.
+      */
+    public com.flight.project_flight.event.AlertEvent.Builder setAlertDate(java.lang.CharSequence value) {
+      validate(fields()[7], value);
+      this.alertDate = value;
+      fieldSetFlags()[7] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'alertDate' field has been set.
+      * @return True if the 'alertDate' field has been set, false otherwise.
+      */
+    public boolean hasAlertDate() {
+      return fieldSetFlags()[7];
+    }
+
+
+    /**
+      * Clears the value of the 'alertDate' field.
+      * @return This builder.
+      */
+    public com.flight.project_flight.event.AlertEvent.Builder clearAlertDate() {
+      alertDate = null;
+      fieldSetFlags()[7] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'flightNumber' field.
+      * @return The value.
+      */
+    public java.lang.CharSequence getFlightNumber() {
+      return flightNumber;
+    }
+
+
+    /**
+      * Sets the value of the 'flightNumber' field.
+      * @param value The value of 'flightNumber'.
+      * @return This builder.
+      */
+    public com.flight.project_flight.event.AlertEvent.Builder setFlightNumber(java.lang.CharSequence value) {
+      validate(fields()[8], value);
+      this.flightNumber = value;
+      fieldSetFlags()[8] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'flightNumber' field has been set.
+      * @return True if the 'flightNumber' field has been set, false otherwise.
+      */
+    public boolean hasFlightNumber() {
+      return fieldSetFlags()[8];
+    }
+
+
+    /**
+      * Clears the value of the 'flightNumber' field.
+      * @return This builder.
+      */
+    public com.flight.project_flight.event.AlertEvent.Builder clearFlightNumber() {
+      flightNumber = null;
+      fieldSetFlags()[8] = false;
+      return this;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public AlertEvent build() {
@@ -465,6 +821,11 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
         record.email = fieldSetFlags()[1] ? this.email : (java.lang.CharSequence) defaultValue(fields()[1]);
         record.firstName = fieldSetFlags()[2] ? this.firstName : (java.lang.CharSequence) defaultValue(fields()[2]);
         record.lastName = fieldSetFlags()[3] ? this.lastName : (java.lang.CharSequence) defaultValue(fields()[3]);
+        record.alertId = fieldSetFlags()[4] ? this.alertId : (java.lang.Long) defaultValue(fields()[4]);
+        record.message = fieldSetFlags()[5] ? this.message : (java.lang.CharSequence) defaultValue(fields()[5]);
+        record.severity = fieldSetFlags()[6] ? this.severity : (java.lang.CharSequence) defaultValue(fields()[6]);
+        record.alertDate = fieldSetFlags()[7] ? this.alertDate : (java.lang.CharSequence) defaultValue(fields()[7]);
+        record.flightNumber = fieldSetFlags()[8] ? this.flightNumber : (java.lang.CharSequence) defaultValue(fields()[8]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;
@@ -505,6 +866,46 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
 
     out.writeString(this.lastName);
 
+    if (this.alertId == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeLong(this.alertId);
+    }
+
+    if (this.message == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.message);
+    }
+
+    if (this.severity == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.severity);
+    }
+
+    if (this.alertDate == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.alertDate);
+    }
+
+    if (this.flightNumber == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.flightNumber);
+    }
+
   }
 
   @Override public void customDecode(org.apache.avro.io.ResolvingDecoder in)
@@ -520,8 +921,43 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
 
       this.lastName = in.readString(this.lastName instanceof Utf8 ? (Utf8)this.lastName : null);
 
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.alertId = null;
+      } else {
+        this.alertId = in.readLong();
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.message = null;
+      } else {
+        this.message = in.readString(this.message instanceof Utf8 ? (Utf8)this.message : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.severity = null;
+      } else {
+        this.severity = in.readString(this.severity instanceof Utf8 ? (Utf8)this.severity : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.alertDate = null;
+      } else {
+        this.alertDate = in.readString(this.alertDate instanceof Utf8 ? (Utf8)this.alertDate : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.flightNumber = null;
+      } else {
+        this.flightNumber = in.readString(this.flightNumber instanceof Utf8 ? (Utf8)this.flightNumber : null);
+      }
+
     } else {
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 9; i++) {
         switch (fieldOrder[i].pos()) {
         case 0:
           this.passwordNumber = in.readString(this.passwordNumber instanceof Utf8 ? (Utf8)this.passwordNumber : null);
@@ -537,6 +973,51 @@ public class AlertEvent extends org.apache.avro.specific.SpecificRecordBase impl
 
         case 3:
           this.lastName = in.readString(this.lastName instanceof Utf8 ? (Utf8)this.lastName : null);
+          break;
+
+        case 4:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.alertId = null;
+          } else {
+            this.alertId = in.readLong();
+          }
+          break;
+
+        case 5:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.message = null;
+          } else {
+            this.message = in.readString(this.message instanceof Utf8 ? (Utf8)this.message : null);
+          }
+          break;
+
+        case 6:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.severity = null;
+          } else {
+            this.severity = in.readString(this.severity instanceof Utf8 ? (Utf8)this.severity : null);
+          }
+          break;
+
+        case 7:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.alertDate = null;
+          } else {
+            this.alertDate = in.readString(this.alertDate instanceof Utf8 ? (Utf8)this.alertDate : null);
+          }
+          break;
+
+        case 8:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.flightNumber = null;
+          } else {
+            this.flightNumber = in.readString(this.flightNumber instanceof Utf8 ? (Utf8)this.flightNumber : null);
+          }
           break;
 
         default:

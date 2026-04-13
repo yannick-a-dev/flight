@@ -49,10 +49,10 @@ public class AlertService {
     }
 
 
-    private static final String PASSWORD_NUMBER_FIELD = "passwordNumber";
-    private static final String EMAIL_FIELD = "email";
-    private static final String FIRST_NAME_FIELD = "firstName";
-    private static final String LAST_NAME_FIELD = "lastName";
+//    private static final String PASSWORD_NUMBER_FIELD = "passwordNumber";
+//    private static final String EMAIL_FIELD = "email";
+//    private static final String FIRST_NAME_FIELD = "firstName";
+//    private static final String LAST_NAME_FIELD = "lastName";
 
     private final AlertRepository alertRepository;
     private final KafkaTemplate<String, GenericRecord> kafkaTemplate;
@@ -63,39 +63,33 @@ public class AlertService {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    @Retryable(retryFor = {SerializationException.class}, maxAttempts = 3, backoff = @Backoff(delay = 2000))
-    public Alert createAlertForPassenger(Passenger passenger, Flight flight, LocalDateTime alertDate, String message, String severity) {
-        MDC.put("passengerId", passenger != null ? passenger.getId().toString() : "unknown");
+    public Alert createAlertForPassenger(
+            Passenger passenger,
+            Flight flight,
+            LocalDateTime alertDate,
+            String message,
+            String severity) {
+
+        MDC.put("passengerId", passenger.getId().toString());
+
         try {
-            log.debug("Starting to create alert for Passenger: {}, Flight: {}, AlertDate: {}, Message: {}, Severity: {}",
-                    passenger != null ? "[REDACTED]" : null, flight, alertDate, message, severity);
-
-            log.debug("Validating inputs...");
             validateInputs(passenger, flight, alertDate, message, severity);
-            log.debug("Inputs validation successful.");
-
-            Alert existingAlert = alertRepository.findByPassengerAndFlightAndMessageAndAlertDate(passenger, flight, message, alertDate);
-            if (existingAlert != null) {
-                log.info("Existing alert found: {}", existingAlert);
-                return existingAlert;
-            }
-
-            Severity severityEnum = parseSeverity(severity);
+            Severity severityEnum = Severity.valueOf(severity.toUpperCase());
             Alert alert = new Alert(passenger, flight, message, severityEnum, alertDate);
-            log.info("New Alert created: {}", alert);
-
-            AlertEvent alertEvent = createAlertEvent(passenger);
-            sendAlertEventToKafka(alertEvent);
-
             Alert savedAlert = alertRepository.save(alert);
-            log.info("Alert saved successfully: {}", savedAlert);
-
+            AlertEvent event = createAlertEvent(savedAlert);
+            sendAlertEventToKafka(event);
             return savedAlert;
         } finally {
             MDC.clear();
         }
     }
 
+    @Retryable(
+            retryFor = {SerializationException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 2000)
+    )
     private void sendAlertEventToKafka(AlertEvent alertEvent) {
         log.debug("Preparing to send AlertEvent to Kafka: {}", alertEvent);
 
@@ -110,12 +104,21 @@ public class AlertService {
         }
     }
 
-    public GenericRecord createAvroRecord(AlertEvent alertEvent) {
+    public GenericRecord createAvroRecord(AlertEvent event) {
+
         GenericRecord record = new GenericData.Record(SCHEMA);
-        record.put("passwordNumber", alertEvent.getPasswordNumber());
-        record.put("email", alertEvent.getEmail());
-        record.put("firstName", alertEvent.getFirstName());
-        record.put("lastName", alertEvent.getLastName());
+
+        record.put("passwordNumber", event.getPasswordNumber());
+        record.put("email", event.getEmail());
+        record.put("firstName", event.getFirstName());
+        record.put("lastName", event.getLastName());
+
+        record.put("alertId", event.getAlertId());
+        record.put("message", event.getMessage());
+        record.put("severity", event.getSeverity());
+        record.put("alertDate", event.getAlertDate().toString());
+        record.put("flightNumber", event.getFlightNumber());
+
         return record;
     }
 
@@ -144,12 +147,27 @@ public class AlertService {
         }
     }
 
-    private AlertEvent createAlertEvent(Passenger passenger) {
+    private AlertEvent createAlertEvent(Alert alert) {
+
+        Passenger passenger = alert.getPassenger();
+        Flight flight = alert.getFlight();
+
         AlertEvent alertEvent = new AlertEvent();
+
+        // Passenger
         alertEvent.setPasswordNumber(passenger.getPassportNumber());
         alertEvent.setEmail(passenger.getEmail());
         alertEvent.setFirstName(passenger.getFirstName());
         alertEvent.setLastName(passenger.getLastName());
+
+        // Alert (IMPORTANT)
+        alertEvent.setMessage(alert.getMessage());
+        alertEvent.setSeverity(alert.getSeverity().name());
+        alertEvent.setAlertDate(alert.getAlertDate().toString());
+
+        // Flight (IMPORTANT)
+        alertEvent.setFlightNumber(flight.getFlightNumber());
+
         return alertEvent;
     }
 

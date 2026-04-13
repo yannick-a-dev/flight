@@ -185,7 +185,10 @@
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.2.0</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.hibernate.validator</groupId>
+			<artifactId>hibernate-validator</artifactId>
+		</dependency>
 	</dependencies>
     <repositories>
         <repository>
@@ -233,6 +236,7 @@
 			<plugin>
 			  <groupId>org.apache.avro</groupId>
 				<artifactId>avro-maven-plugin</artifactId>
+				<version>1.11.3</version>
 				<executions>
 				 <execution>
 					<id>schemas</id>
