@@ -54,12 +54,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/airports/**").permitAll()
 
                         //Passenger
+                        .requestMatchers(HttpMethod.POST, "/api/passengers/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/passengers/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/passengers/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/passengers/**").permitAll()
 
                         // Airports - POST, PUT, DELETE
                         .requestMatchers(HttpMethod.POST, "/api/airports/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/airports/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/airports/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/airports/**").permitAll()
                         //.requestMatchers(HttpMethod.PUT, "/api/airports/**").hasRole("ADMIN")
                         //.requestMatchers(HttpMethod.DELETE, "/api/airports/**").hasRole("ADMIN")
 

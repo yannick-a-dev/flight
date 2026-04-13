@@ -2,6 +2,7 @@ package com.flight.project_flight.service;
 
 import com.flight.project_flight.dto.PassengerDTO;
 import com.flight.project_flight.exception.EmailAlreadyExistsException;
+import com.flight.project_flight.exception.PassengerNotFoundException;
 import com.flight.project_flight.mapper.AlertMapper;
 import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.repository.PassengerRepository;
@@ -149,7 +150,8 @@ public class PassengerService implements UserDetailsService {
     }
 
     public Passenger findById(Long id) {
-        return passengerRepository.findById(id).orElseThrow(() -> new RuntimeException("Passenger not found"));
+        return passengerRepository.findById(id)
+                .orElseThrow(() -> new PassengerNotFoundException(id));
     }
 
     public void deletePassenger(Passenger passenger) {

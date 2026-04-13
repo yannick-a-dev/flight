@@ -2,10 +2,16 @@
   "type": "record",
   "name": "AlertEvent",
   "namespace": "com.flight.project_flight.event",
-  "fields":[
+  "fields": [
     {"name": "passwordNumber", "type": "string"},
     {"name": "email", "type": "string"},
     {"name": "firstName", "type": "string"},
-    {"name": "lastName", "type": "string"}
+    {"name": "lastName", "type": "string"},
+
+    {"name": "alertId", "type": ["null", "long"], "default": null},
+    {"name": "message", "type": ["null", "string"], "default": null},
+    {"name": "severity", "type": ["null", "string"], "default": null},
+    {"name": "alertDate", "type": ["null", "string"], "default": null},
+    {"name": "flightNumber", "type": ["null", "string"], "default": null}
   ]
 }

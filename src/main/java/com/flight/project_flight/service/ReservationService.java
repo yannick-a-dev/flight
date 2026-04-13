@@ -35,7 +35,7 @@ public class ReservationService {
 
         // Vérifier que le passager existe
         Passenger passenger = passengerRepository.findById(dto.getPassengerId())
-                .orElseThrow(() -> new PassengerNotFoundException("Passenger not found with id: " + dto.getPassengerId()));
+                .orElseThrow(() -> new PassengerNotFoundException(dto.getPassengerId()));
 
         // Créer l'entité Reservation
         Reservation reservation = new Reservation();

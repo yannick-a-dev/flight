@@ -75,5 +75,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Une erreur inattendue est survenue : " + e.getMessage()));
     }
+
+    @ExceptionHandler(PassengerNotFoundException.class)
+    public ResponseEntity<String> handlePassengerNotFound(PassengerNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
 }
 

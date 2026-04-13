@@ -46,43 +46,18 @@ public class AlertController {
 
     @PostMapping
     public ResponseEntity<AlertDto> createAlert(@RequestBody AlertDto alertDto) {
-        log.debug("Received request to create alert: {}", alertDto);
+
         if (alertDto.getPassengerId() == null || alertDto.getFlightNumber() == null) {
-            log.error("PassengerId or FlightNumber is missing in the request: {}", alertDto);
             return ResponseEntity.badRequest().build();
         }
         Passenger passenger = passengerService.findById(alertDto.getPassengerId());
-        if (passenger == null) {
-            log.error("Passenger not found with ID: {}", alertDto.getPassengerId());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
         Flight flight = flightService.findByFlightNumber(alertDto.getFlightNumber())
                 .orElseThrow(() -> new FlightNotFoundException(alertDto.getFlightNumber()));
 
-        Severity severity;
-        try {
-            severity = Severity.valueOf(alertDto.getSeverity().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid severity value: {}", alertDto.getSeverity(), e);
-            return ResponseEntity.badRequest().build();
-        }
-
         LocalDateTime alertDate = alertDto.getAlertDate() != null ? alertDto.getAlertDate() : LocalDateTime.now();
-
-        Alert alert = flightAlertService.createAlertForFlight(
-                alertDto.getPassengerId(),
-                alertDto.getFlightNumber(),
-                alertDto.getMessage(),
-                severity,
-                alertDate
-        );
-
-        if (alert == null) {
-            log.error("Failed to create alert");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(alertMapper.mapToDto(alert));
+        Alert alert = alertService.createAlertForPassenger(passenger, flight, alertDate, alertDto.getMessage(), alertDto.getSeverity());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(alertMapper.mapToDto(alert));
     }
 
     @GetMapping("/all")
