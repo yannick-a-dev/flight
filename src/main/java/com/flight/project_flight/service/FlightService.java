@@ -1,13 +1,12 @@
 package com.flight.project_flight.service;
 
-import com.flight.project_flight.dto.AlertDto;
-import com.flight.project_flight.dto.FlightDto;
-import com.flight.project_flight.dto.ReservationDto;
+import com.flight.project_flight.dto.*;
 import com.flight.project_flight.enums.FlightStatus;
 import com.flight.project_flight.enums.Severity;
 import com.flight.project_flight.exception.FlightNotFoundException;
 import com.flight.project_flight.exception.InvalidFlightDataException;
 import com.flight.project_flight.mapper.AlertMapper;
+import com.flight.project_flight.mapper.FlightMapper;
 import com.flight.project_flight.mapper.ReservationMapper;
 import com.flight.project_flight.models.Airport;
 import com.flight.project_flight.models.Alert;
@@ -29,163 +28,151 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class FlightService {
+
     private final FlightRepository flightRepository;
     private final AlertMapper alertMapper;
     private final ReservationMapper reservationMapper;
-    private final PassengerService passengerService;
-
     private final AirportRepository airportRepository;
+    private final FlightMapper flightMapper;
 
-    public FlightService(FlightRepository flightRepository, AlertMapper alertMapper, ReservationMapper reservationMapper, PassengerService passengerService, AirportRepository airportRepository) {
+    public FlightService(FlightRepository flightRepository,
+                         AlertMapper alertMapper,
+                         ReservationMapper reservationMapper,
+                         AirportRepository airportRepository, FlightMapper flightMapper) {
         this.flightRepository = flightRepository;
         this.alertMapper = alertMapper;
         this.reservationMapper = reservationMapper;
-        this.passengerService = passengerService;
         this.airportRepository = airportRepository;
+        this.flightMapper = flightMapper;
     }
 
-
-    public Flight createFlight(FlightDto flightDto) {
-        if (flightRepository.findByFlightNumber(flightDto.getFlightNumber()).isPresent()) {
-            throw new IllegalArgumentException("Flight with this flight number already exists.");
+    public Flight createFlight(FlightDto dto) {
+        if (flightRepository.findByFlightNumber(dto.getFlightNumber()).isPresent()) {
+            throw new IllegalArgumentException("Flight already exists");
         }
 
-        Flight flight = new Flight();
-        flight.setFlightNumber(flightDto.getFlightNumber());
-        flight.setDepartureTime(flightDto.getDepartureTime());
-        flight.setArrivalTime(flightDto.getArrivalTime());
-        flight.setDepartureAirport(flightDto.getDepartureAirport());
-        flight.setArrivalAirport(flightDto.getArrivalAirport());
-
-        try {
-            flight.setStatus(FlightStatus.valueOf(flightDto.getStatus()));
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid flight status: " + flightDto.getStatus());
-        }
-
-        // --- ALERTS ---
-        if (flightDto.getAlerts() != null) {
-            List<Alert> alerts = alertMapper.mapToAlerts(flightDto.getAlerts(), flight);
-            for (Alert alert : alerts) {
-                flight.addAlert(alert); // garde la même instance de collection
-            }
-        }
-
-        // --- RESERVATIONS ---
-        if (flightDto.getReservations() != null) {
-            List<Reservation> reservations = reservationMapper.mapToReservations(flightDto.getReservations(), flight);
-            for (Reservation reservation : reservations) {
-                flight.addReservation(reservation);
-            }
-        }
-
+        Flight flight = flightMapper.toEntity(dto);
         return flightRepository.save(flight);
+    }
+    @Transactional
+    public Flight updateFlight(String flightNumber, FlightDto dto) {
+
+        Flight flight = flightRepository.findByFlightNumber(flightNumber)
+                .orElseThrow(() -> new FlightNotFoundException(flightNumber));
+
+        validateDates(dto);
+        applyBaseFields(flight, dto);
+        applyAirports(flight, dto);
+        applyStatus(flight, dto.getStatus());
+        refreshRelations(flight);
+        return flightRepository.save(flight);
+    }
+
+    private void applyBaseFields(Flight flight, FlightDto dto) {
+        flight.setFlightNumber(dto.getFlightNumber());
+        flight.setDepartureTime(dto.getDepartureTime());
+        flight.setArrivalTime(dto.getArrivalTime());
+    }
+
+    private void applyAirports(Flight flight, FlightDto dto) {
+        flight.setDepartureAirport(findAirport(dto.getDepartureAirport(), "Departure"));
+        flight.setArrivalAirport(findAirport(dto.getArrivalAirport(), "Arrival"));
+    }
+    private void applyStatus(Flight flight, String status) {
+        try {
+            flight.setStatus(FlightStatus.valueOf(status));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid flight status: " + status);
+        }
+    }
+
+    public List<Flight> getAllFlights() {
+        return flightRepository.findAll();
+    }
+
+    public Flight getFlightByNumber(String flightNumber) {
+        return flightRepository.findByFlightNumber(flightNumber)
+                .orElseThrow(() -> new FlightNotFoundException(flightNumber));
     }
 
     public Optional<Flight> findByFlightNumber(String flightNumber) {
         return flightRepository.findByFlightNumber(flightNumber);
     }
-    public List<Flight> getAllFlights() {
-        return flightRepository.findAll();
-    }
 
-    public Optional<Flight> getFlightByFlightNumber(String flightNumber) {
-        return flightRepository.findByFlightNumber(flightNumber);
-    }
-    @Transactional
-    public Flight updateFlight(String flightNumber, FlightDto flightDto) {
-        Flight existingFlight = flightRepository.findByFlightNumber(flightNumber)
-                .orElseThrow(() -> new FlightNotFoundException(flightNumber));
-
-        // Validation dates
-        if (flightDto.getDepartureTime().isAfter(flightDto.getArrivalTime())) {
-            throw new InvalidFlightDataException("Departure time cannot be after arrival time.");
-        }
-
-        // Mise à jour des infos de base
-        existingFlight.setDepartureTime(flightDto.getDepartureTime());
-        existingFlight.setArrivalTime(flightDto.getArrivalTime());
-        existingFlight.setDepartureAirport(flightDto.getDepartureAirport());
-        existingFlight.setArrivalAirport(flightDto.getArrivalAirport());
-
-        try {
-            existingFlight.setStatus(FlightStatus.valueOf(flightDto.getStatus()));
-        } catch (IllegalArgumentException e) {
-            throw new InvalidFlightDataException("Invalid flight status: " + flightDto.getStatus());
-        }
-
-        // --- ALERTS ---
-        existingFlight.getAlerts().clear();
-        if (flightDto.getAlerts() != null) {
-            List<Alert> mappedAlerts = alertMapper.mapToAlerts(flightDto.getAlerts(), existingFlight);
-            existingFlight.getAlerts().addAll(mappedAlerts);
-        }
-
-        // --- RESERVATIONS ---
-        existingFlight.getReservations().clear();
-        if (flightDto.getReservations() != null) {
-            List<Reservation> mappedReservations = reservationMapper.mapToReservations(flightDto.getReservations(), existingFlight);
-            existingFlight.getReservations().addAll(mappedReservations);
-        }
-
-        return flightRepository.save(existingFlight);
-    }
-
-    public void deleteFlight(String flightNumber) {
-        Flight flight = flightRepository.findByFlightNumber(flightNumber)
-                .orElseThrow(() -> new RuntimeException("Flight not found with id " + flightNumber));
-        flightRepository.delete(flight);
-    }
     public List<Flight> getFlightsByPassenger(Long passengerId) {
         return flightRepository.findFlightsByPassengerId(passengerId);
     }
 
-    public Flight getFlightByNumber(String flightNumber) {
-        return flightRepository.findByFlightNumber(flightNumber)
-                .orElseThrow(() -> new FlightNotFoundException("Flight not found with number: " + flightNumber));
+    public long countAllFlights() {
+        return flightRepository.count();
     }
 
-    public List<FlightDto> getFlightsByAirport(Long airportId) {
-        // 1️⃣ Récupérer l'aéroport pour obtenir son code IATA
+    public void deleteFlight(String flightNumber) {
+        Flight flight = getFlightByNumber(flightNumber);
+        flightRepository.delete(flight);
+    }
+
+    public List<FlightResponseDto> getFlightsByAirport(Long airportId) {
         Airport airport = airportRepository.findById(airportId)
-                .orElseThrow(() -> new EntityNotFoundException("Airport not found with ID: " + airportId));
-
-        String airportCode = airport.getCode();
-
-        // 2️⃣ Récupérer les vols où l'aéroport est départ ou arrivée
-        List<Flight> flights = flightRepository.findByDepartureAirportOrArrivalAirport(airportCode, airportCode);
-
-        // 3️⃣ Mapper les vols en FlightDto
-        return flights.stream()
-                .map(flight -> {
-                    List<ReservationDto> reservations = flight.getReservations().stream()
-                            .map(reservationMapper::toDto)
-                            .collect(Collectors.toList());
-
-                    List<AlertDto> alerts = flight.getAlerts().stream()
-                            .map(alertMapper::toDto)
-                            .collect(Collectors.toList());
-
-                    var dto = getFlightDto(flight, reservations, alerts);
-                    return dto;
-                })
-                .collect(Collectors.toList());
+                .orElseThrow(() -> new EntityNotFoundException("Airport not found"));
+        String code = airport.getCode();
+        return flightRepository
+                .findByDepartureAirport_CodeOrArrivalAirport_Code(code, code)
+                .stream()
+                .map(this::toDto)
+                .toList();
     }
 
-    private static FlightDto getFlightDto(Flight flight, List<ReservationDto> reservations, List<AlertDto> alerts) {
-        FlightDto dto = new FlightDto();
+    private FlightResponseDto toDto(Flight flight) {
+
+        List<ReservationResponseDto> reservations =
+                reservationMapper.toResponseDtoList(flight.getReservations());
+
+        List<AlertResponseDto> alerts =
+                alertMapper.toResponseDtoList(flight.getAlerts());
+
+        return buildDto(flight, reservations, alerts);
+    }
+
+    private static FlightResponseDto buildDto(
+            Flight flight,
+            List<ReservationResponseDto> reservations,
+            List<AlertResponseDto> alerts) {
+
+        FlightResponseDto dto = new FlightResponseDto();
+
         dto.setFlightNumber(flight.getFlightNumber());
         dto.setDepartureTime(flight.getDepartureTime());
         dto.setArrivalTime(flight.getArrivalTime());
-        dto.setDepartureAirport(flight.getDepartureAirport());
-        dto.setArrivalAirport(flight.getArrivalAirport());
+        dto.setDepartureAirport(getCode(flight.getDepartureAirport()));
+        dto.setArrivalAirport(getCode(flight.getArrivalAirport()));
         dto.setStatus(flight.getStatus().name());
+
         dto.setReservations(reservations);
         dto.setAlerts(alerts);
+
         return dto;
     }
 
-    public long countAllFlights() {
-        return flightRepository.count();
+    private static String getCode(Airport airport) {
+        return airport != null ? airport.getCode() : null;
+    }
+
+
+    private Airport findAirport(String code, String label) {
+        return airportRepository.findByCode(code)
+                .orElseThrow(() -> new IllegalArgumentException(label + " airport not found: " + code));
+    }
+
+    private void refreshRelations(Flight flight) {
+
+        flight.getAlerts().clear();
+        flight.getReservations().clear();
+    }
+
+    private void validateDates(FlightDto dto) {
+        if (dto.getDepartureTime().isAfter(dto.getArrivalTime())) {
+            throw new InvalidFlightDataException("Departure after arrival");
+        }
     }
 }

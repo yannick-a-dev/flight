@@ -1,11 +1,9 @@
 package com.flight.project_flight.mapper;
 
 import com.flight.project_flight.dto.ReservationDto;
-import com.flight.project_flight.exception.PassengerNotFoundException;
+import com.flight.project_flight.dto.ReservationResponseDto;
 import com.flight.project_flight.models.Flight;
-import com.flight.project_flight.models.Passenger;
 import com.flight.project_flight.models.Reservation;
-import com.flight.project_flight.repository.PassengerRepository;
 import com.flight.project_flight.service.PassengerService;
 import org.springframework.stereotype.Component;
 
@@ -15,63 +13,102 @@ import java.util.stream.Collectors;
 
 @Component
 public class ReservationMapper {
-    private final PassengerRepository passengerRepository;
 
     private final PassengerService passengerService;
 
-    public ReservationMapper(PassengerRepository passengerRepository, PassengerService passengerService) {
-        this.passengerRepository = passengerRepository;
+    public ReservationMapper(PassengerService passengerService) {
         this.passengerService = passengerService;
     }
 
-    public Reservation toEntity(ReservationDto reservationDto) {
+    // =========================
+    // DTO -> ENTITY
+    // =========================
+    public Reservation toEntity(ReservationDto dto) {
+        if (dto == null) return null;
+
         Reservation reservation = new Reservation();
-        reservation.setReservationDate(reservationDto.getReservationDate());
-        reservation.setSeatNumber(reservationDto.getSeatNumber());
-        reservation.setPrice(reservationDto.getPrice());
-        Passenger passenger = passengerService.findById(reservationDto.getPassengerId());
-        reservation.setPassenger(passenger);
+
+        reservation.setId(dto.getId());
+        reservation.setReservationDate(dto.getReservationDate());
+        reservation.setSeatNumber(dto.getSeatNumber());
+        reservation.setPrice(dto.getPrice());
+
+        if (dto.getPassengerId() != null) {
+            reservation.setPassenger(passengerService.findById(dto.getPassengerId()));
+        }
+
         return reservation;
     }
 
+    // =========================
+    // ENTITY -> DTO
+    // =========================
     public ReservationDto toDto(Reservation reservation) {
-        ReservationDto reservationDto = new ReservationDto();
-        reservationDto.setId(reservation.getId());
-        reservationDto.setReservationDate(reservation.getReservationDate());
-        reservationDto.setSeatNumber(reservation.getSeatNumber());
-        reservationDto.setPrice(reservation.getPrice());
+        if (reservation == null) return null;
+
+        ReservationDto dto = new ReservationDto();
+
+        dto.setId(reservation.getId());
+        dto.setReservationDate(reservation.getReservationDate());
+        dto.setSeatNumber(reservation.getSeatNumber());
+        dto.setPrice(reservation.getPrice());
 
         if (reservation.getPassenger() != null) {
-            reservationDto.setPassengerId(reservation.getPassenger().getId());
+            dto.setPassengerId(reservation.getPassenger().getId());
         }
 
         if (reservation.getFlight() != null) {
-            reservationDto.setFlightNumber(reservation.getFlight().getFlightNumber());
+            dto.setFlightNumber(reservation.getFlight().getFlightNumber());
         }
 
-        return reservationDto;
+        return dto;
     }
 
+    // =========================
+    // LIST MAPPING (PROPRE)
+    // =========================
+    public List<Reservation> toEntityList(List<ReservationDto> dtos, Flight flight) {
+        if (dtos == null) return Collections.emptyList();
 
-    public List<Reservation> mapToReservations(List<ReservationDto> reservationDtos, Flight flight) {
-        if (reservationDtos == null) return Collections.emptyList();
-
-        return reservationDtos.stream()
+        return dtos.stream()
                 .map(dto -> {
-                    Reservation reservation = new Reservation();
-                    reservation.setId(dto.getId());
-                    reservation.setReservationDate(dto.getReservationDate());
-                    reservation.setSeatNumber(dto.getSeatNumber());
-                    reservation.setPrice(dto.getPrice());
-                    reservation.setFlight(flight);
-
-                    if (dto.getPassengerId() != null) {
-                        passengerRepository.findById(dto.getPassengerId()).ifPresent(reservation::setPassenger);
-                    }
-
+                    Reservation reservation = toEntity(dto); // ✅ réutilisation
+                    reservation.setFlight(flight);           // 🔥 lien important
                     return reservation;
                 })
                 .collect(Collectors.toList());
     }
 
+    public List<ReservationDto> toDtoList(List<Reservation> reservations) {
+        if (reservations == null) return Collections.emptyList();
+
+        return reservations.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public ReservationResponseDto toResponseDto(Reservation reservation) {
+        if (reservation == null) return null;
+
+        ReservationResponseDto dto = new ReservationResponseDto();
+
+        dto.setId(reservation.getId());
+        dto.setReservationDate(reservation.getReservationDate());
+        dto.setSeatNumber(reservation.getSeatNumber());
+        dto.setPrice(reservation.getPrice() != null ? reservation.getPrice().doubleValue() : null);
+
+        if (reservation.getPassenger() != null) {
+            dto.setPassengerId(reservation.getPassenger().getId());
+        }
+
+        return dto;
+    }
+
+    public List<ReservationResponseDto> toResponseDtoList(List<Reservation> reservations) {
+        if (reservations == null) return Collections.emptyList();
+
+        return reservations.stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+    }
 }

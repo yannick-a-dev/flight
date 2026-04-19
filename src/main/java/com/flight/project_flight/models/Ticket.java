@@ -22,16 +22,28 @@ import java.util.List;
 public class Ticket {
     @Id
     private String ticketNumber;
+
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
+    @Column(nullable = false)
     private LocalDateTime issueDate;
+
+    @Column(nullable = false)
     private BigDecimal price;
 
     @ManyToOne
-    @JoinColumn(name = "passenger_id")
+    @JoinColumn(
+            name = "passenger_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_ticket_passenger")
+    )
     private Passenger passenger;
 
     @ManyToOne
-    @JoinColumn(name = "flight_id")
+    @JoinColumn(
+            name = "flight_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_ticket_flight")
+    )
     private Flight flight;
 
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL)

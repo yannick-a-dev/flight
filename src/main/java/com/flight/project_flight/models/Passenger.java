@@ -59,11 +59,17 @@ public class Passenger implements UserDetails {
     @NotNull(message = "Enabled is required")
     private Boolean enabled;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
+            joinColumns = @JoinColumn(
+                    name = "user_id",
+                    foreignKey = @ForeignKey(name = "fk_user_roles_user")
+            ),
+            inverseJoinColumns = @JoinColumn(
+                    name = "role_id",
+                    foreignKey = @ForeignKey(name = "fk_user_roles_role")
+            )
     )
     @JsonIdentityReference(alwaysAsId = true)
     private List<Role> roles = new ArrayList<>();

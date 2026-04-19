@@ -1,6 +1,7 @@
 package com.flight.project_flight.mapper;
 
 import com.flight.project_flight.dto.AlertDto;
+import com.flight.project_flight.dto.AlertResponseDto;
 import com.flight.project_flight.enums.Severity;
 import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
@@ -20,62 +21,85 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class AlertMapper {
-    private final PassengerService passengerService;
-    private final PassengerRepository passengerRepository;
 
-    public AlertMapper(PassengerService passengerService, PassengerRepository passengerRepository) {
+    private final PassengerService passengerService;
+
+    public AlertMapper(PassengerService passengerService) {
         this.passengerService = passengerService;
-        this.passengerRepository = passengerRepository;
     }
 
-    public Alert toEntity(AlertDto alertDto) {
+    // =========================
+    // DTO -> ENTITY
+    // =========================
+    public Alert toEntity(AlertDto dto) {
+        if (dto == null) return null;
+
         Alert alert = new Alert();
-        alert.setMessage(alertDto.getMessage());
-        alert.setAlertDate(alertDto.getAlertDate());
-        alert.setSeverity(Severity.valueOf(alertDto.getSeverity().toUpperCase()));
-        Passenger passenger = passengerService.findById(alertDto.getPassengerId());
-        alert.setPassenger(passenger);
+
+        alert.setMessage(dto.getMessage());
+        alert.setAlertDate(dto.getAlertDate());
+        alert.setSeverity(parseSeverity(dto.getSeverity()));
+
+        if (dto.getPassengerId() != null) {
+            alert.setPassenger(passengerService.findById(dto.getPassengerId()));
+        }
+
         return alert;
     }
 
-    public AlertDto toDto(Alert alert) {
-        AlertDto alertDto = new AlertDto();
-        alertDto.setMessage(alert.getMessage());
-        alertDto.setAlertDate(alert.getAlertDate());
-        alertDto.setSeverity(alert.getSeverity().name().toLowerCase());
-        alertDto.setPassengerId(alert.getPassenger().getId());
-        return alertDto;
+    // =========================
+    // ENTITY -> RESPONSE DTO
+    // =========================
+    public AlertResponseDto toResponseDto(Alert alert) {
+        if (alert == null) return null;
+
+        AlertResponseDto dto = new AlertResponseDto();
+
+        dto.setMessage(alert.getMessage());
+        dto.setAlertDate(alert.getAlertDate());
+        dto.setSeverity(alert.getSeverity() != null ? alert.getSeverity().name() : null);
+
+        if (alert.getPassenger() != null) {
+            dto.setPassengerId(alert.getPassenger().getId());
+        }
+
+        return dto;
     }
 
-    public List<Alert> mapToAlerts(List<AlertDto> alertDtos, Flight flight) {
-        if (alertDtos == null) return Collections.emptyList();
+    // =========================
+    // LIST MAPPING
+    // =========================
+    public List<Alert> toEntityList(List<AlertDto> dtos, Flight flight) {
+        if (dtos == null) return Collections.emptyList();
 
-        return alertDtos.stream()
+        return dtos.stream()
                 .map(dto -> {
-                    Alert alert = new Alert();
-                    alert.setMessage(dto.getMessage());
-                    alert.setAlertDate(dto.getAlertDate());
-                    alert.setSeverity(Severity.valueOf(dto.getSeverity()));
-                    alert.setFlight(flight);
-
-                    if (dto.getPassengerId() != null) {
-                        passengerRepository.findById(dto.getPassengerId()).ifPresent(alert::setPassenger);
-                        // si Passenger absent, on ignore au lieu de lancer exception
-                    }
-
+                    Alert alert = toEntity(dto); // ✅ réutilisation
+                    alert.setFlight(flight);     // 🔥 relation JPA
                     return alert;
                 })
                 .collect(Collectors.toList());
     }
 
-    public AlertDto mapToDto(Alert alert) {
-        AlertDto dto = new AlertDto();
-        dto.setId(alert.getId());
-        dto.setMessage(alert.getMessage());
-        dto.setAlertDate(alert.getAlertDate() != null ? alert.getAlertDate() : LocalDateTime.now());
-        dto.setSeverity(alert.getSeverity() != null ? alert.getSeverity().name() : "LOW");
-        dto.setPassengerId(alert.getPassenger() != null ? alert.getPassenger().getId() : null);
-        dto.setFlightNumber(alert.getFlight() != null ? alert.getFlight().getFlightNumber() : null);
-        return dto;
+    public List<AlertResponseDto> toResponseDtoList(List<Alert> alerts) {
+        if (alerts == null) return Collections.emptyList();
+
+        return alerts.stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    // =========================
+    // HELPER
+    // =========================
+    private Severity parseSeverity(String severity) {
+        if (severity == null) return null;
+
+        try {
+            return Severity.valueOf(severity.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid severity value: {}", severity);
+            return null; // ou Severity.LOW si tu veux une valeur par défaut
+        }
     }
 }

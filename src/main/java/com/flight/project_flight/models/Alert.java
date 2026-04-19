@@ -27,21 +27,29 @@ public class Alert {
     private String message;
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime alertDate;
+
+    @Enumerated(EnumType.STRING)
     @NotNull
     private Severity severity;
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "passenger_id")
-    @ToString.Exclude
+    @JoinColumn(
+            name = "passenger_id",
+            foreignKey = @ForeignKey(name = "fk_alert_passenger")
+    )
     private Passenger passenger;
 
     @ManyToOne
-    @JoinColumn(name = "flight_id")
-    @ToString.Exclude
+    @JoinColumn(
+            name = "flight_id",
+            foreignKey = @ForeignKey(name = "fk_alert_flight")
+    )
     private Flight flight;
 
     @ManyToOne
-    @JoinColumn(name = "ticket_id")
-    @ToString.Exclude
+    @JoinColumn(
+            name = "ticket_id",
+            foreignKey = @ForeignKey(name = "fk_alert_ticket")
+    )
     private Ticket ticket;
 
     public Alert() {}

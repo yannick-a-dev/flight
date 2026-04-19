@@ -26,20 +26,17 @@ public class FlightDto {
     private LocalDateTime arrivalTime;
 
     @NotNull(message = "Departure airport cannot be null")
-    @Size(min = 3, max = 3, message = "Departure airport code must be exactly 3 characters")
+    @Size(min = 3, max = 5, message = "Departure airport code must be exactly 3 characters")
     private String departureAirport;
 
     @NotNull(message = "Arrival airport cannot be null")
-    @Size(min = 3, max = 3, message = "Arrival airport code must be exactly 3 characters")
+    @Size(min = 3, max = 5, message = "Arrival airport code must be exactly 3 characters")
     private String arrivalAirport;
 
     @NotNull(message = "Status cannot be null")
     private String status;
 
-    @NotNull(message = "Reservations list cannot be null")
     private List<ReservationDto> reservations;
-
-    @NotNull(message = "Alerts list cannot be null")
     private List<AlertDto> alerts;
 
     public String getFlightNumber() {
@@ -82,6 +79,14 @@ public class FlightDto {
         this.arrivalAirport = arrivalAirport;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public List<ReservationDto> getReservations() {
         return reservations;
     }
@@ -96,14 +101,6 @@ public class FlightDto {
 
     public void setAlerts(List<AlertDto> alerts) {
         this.alerts = alerts;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 }
 
