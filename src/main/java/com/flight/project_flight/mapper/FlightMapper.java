@@ -32,9 +32,6 @@ public class FlightMapper {
         this.airportRepository = airportRepository;
     }
 
-    // =========================
-    // DTO -> ENTITY
-    // =========================
     public Flight toEntity(FlightDto flightDto) {
         Flight flight = new Flight();
 
@@ -72,9 +69,6 @@ public class FlightMapper {
         return flight;
     }
 
-    // =========================
-    // ENTITY -> DTO
-    // =========================
     public FlightResponseDto toResponseDto(Flight flight) {
         FlightResponseDto dto = new FlightResponseDto();
 
@@ -93,9 +87,6 @@ public class FlightMapper {
         return dto;
     }
 
-    // =========================
-    // PRIVATE HELPERS
-    // =========================
 
     private Airport findAirport(String code) {
         return airportRepository.findByCode(code)

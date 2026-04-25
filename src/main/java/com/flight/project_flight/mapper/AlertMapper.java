@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-@Slf4j
 public class AlertMapper {
 
     private final PassengerService passengerService;
@@ -28,9 +27,6 @@ public class AlertMapper {
         this.passengerService = passengerService;
     }
 
-    // =========================
-    // DTO -> ENTITY
-    // =========================
     public Alert toEntity(AlertDto dto) {
         if (dto == null) return null;
 
@@ -47,9 +43,6 @@ public class AlertMapper {
         return alert;
     }
 
-    // =========================
-    // ENTITY -> RESPONSE DTO
-    // =========================
     public AlertResponseDto toResponseDto(Alert alert) {
         if (alert == null) return null;
 
@@ -66,16 +59,13 @@ public class AlertMapper {
         return dto;
     }
 
-    // =========================
-    // LIST MAPPING
-    // =========================
     public List<Alert> toEntityList(List<AlertDto> dtos, Flight flight) {
         if (dtos == null) return Collections.emptyList();
 
         return dtos.stream()
                 .map(dto -> {
-                    Alert alert = toEntity(dto); // ✅ réutilisation
-                    alert.setFlight(flight);     // 🔥 relation JPA
+                    Alert alert = toEntity(dto);
+                    alert.setFlight(flight);
                     return alert;
                 })
                 .collect(Collectors.toList());
@@ -89,17 +79,13 @@ public class AlertMapper {
                 .collect(Collectors.toList());
     }
 
-    // =========================
-    // HELPER
-    // =========================
     private Severity parseSeverity(String severity) {
         if (severity == null) return null;
 
         try {
             return Severity.valueOf(severity.toUpperCase());
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid severity value: {}", severity);
-            return null; // ou Severity.LOW si tu veux une valeur par défaut
+            return null;
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.flight.project_flight.controller;
 
 import com.flight.project_flight.dto.AlertDto;
+import com.flight.project_flight.dto.AlertResponseDto;
 import com.flight.project_flight.enums.Severity;
 import com.flight.project_flight.exception.FlightNotFoundException;
 import com.flight.project_flight.mapper.AlertMapper;
@@ -29,14 +30,18 @@ import java.util.Optional;
 public class AlertController {
 
     private static final Logger log = LoggerFactory.getLogger(AlertController.class);
+
     private final FlightAlertService flightAlertService;
     private final PassengerService passengerService;
     private final FlightService flightService;
     private final AlertService alertService;
     private final AlertMapper alertMapper;
 
-    public AlertController(FlightAlertService flightAlertService, PassengerService passengerService,
-                           FlightService flightService, AlertService alertService, AlertMapper alertMapper) {
+    public AlertController(FlightAlertService flightAlertService,
+                           PassengerService passengerService,
+                           FlightService flightService,
+                           AlertService alertService,
+                           AlertMapper alertMapper) {
         this.flightAlertService = flightAlertService;
         this.passengerService = passengerService;
         this.flightService = flightService;
@@ -44,67 +49,94 @@ public class AlertController {
         this.alertMapper = alertMapper;
     }
 
+    // ✅ CREATE
     @PostMapping
-    public ResponseEntity<AlertDto> createAlert(@RequestBody AlertDto alertDto) {
+    public ResponseEntity<AlertResponseDto> createAlert(@RequestBody AlertDto alertDto) {
 
         if (alertDto.getPassengerId() == null || alertDto.getFlightNumber() == null) {
             return ResponseEntity.badRequest().build();
         }
+
         Passenger passenger = passengerService.findById(alertDto.getPassengerId());
+
         Flight flight = flightService.findByFlightNumber(alertDto.getFlightNumber())
                 .orElseThrow(() -> new FlightNotFoundException(alertDto.getFlightNumber()));
 
-        LocalDateTime alertDate = alertDto.getAlertDate() != null ? alertDto.getAlertDate() : LocalDateTime.now();
-        Alert alert = alertService.createAlertForPassenger(passenger, flight, alertDate, alertDto.getMessage(), alertDto.getSeverity());
+        LocalDateTime alertDate = alertDto.getAlertDate() != null
+                ? alertDto.getAlertDate()
+                : LocalDateTime.now();
+
+        Alert alert = alertService.createAlertForPassenger(
+                passenger,
+                flight,
+                alertDate,
+                alertDto.getMessage(),
+                alertDto.getSeverity()
+        );
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(alertMapper.mapToDto(alert));
+                .body(alertMapper.toResponseDto(alert));
     }
 
+    // ✅ GET ALL
     @GetMapping("/all")
-    public ResponseEntity<List<AlertDto>> getAllAlerts() {
+    public ResponseEntity<List<AlertResponseDto>> getAllAlerts() {
+
         List<Alert> alerts = flightAlertService.getAllAlerts();
-        List<AlertDto> dtos = alerts.stream()
-                .filter(a -> a != null && a.getId() != null && a.getMessage() != null && a.getSeverity() != null)
-                .map(alertMapper::mapToDto)
+
+        List<AlertResponseDto> dtos = alerts.stream()
+                .filter(a -> a != null && a.getId() != null)
+                .map(alertMapper::toResponseDto)
                 .toList();
+
         if (dtos.isEmpty()) {
-            log.warn("⚠️ Aucune alerte valide trouvée dans la base !");
+            log.warn("⚠️ Aucune alerte valide trouvée !");
             return ResponseEntity.noContent().build();
         }
-        log.debug("✅ {} alertes valides envoyées au frontend", dtos.size());
+
         return ResponseEntity.ok(dtos);
     }
 
+    // ✅ GET BY ID
     @GetMapping("/{id}")
-    public ResponseEntity<AlertDto> getAlertById(@PathVariable Long id) {
+    public ResponseEntity<AlertResponseDto> getAlertById(@PathVariable Long id) {
+
         Alert alert = flightAlertService.getAlertById(id);
+
         if (alert == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(alertMapper.mapToDto(alert));
+
+        return ResponseEntity.ok(alertMapper.toResponseDto(alert));
     }
 
+    // ✅ GET BY PASSENGER
     @GetMapping("/passenger/{passengerId}")
-    public ResponseEntity<List<AlertDto>> getAlertsForPassenger(@PathVariable Long passengerId) {
-        List<AlertDto> dtos = flightAlertService.getAlertsForPassenger(passengerId).stream()
-                .map(alertMapper::mapToDto)
+    public ResponseEntity<List<AlertResponseDto>> getAlertsForPassenger(@PathVariable Long passengerId) {
+
+        List<AlertResponseDto> dtos = flightAlertService.getAlertsForPassenger(passengerId).stream()
+                .map(alertMapper::toResponseDto)
                 .toList();
 
         if (dtos.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.notFound().build();
         }
+
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("{flightNumber}/alerts")
-    public ResponseEntity<List<AlertDto>> getAlertsForFlight(@PathVariable String flightNumber) {
-        List<AlertDto> dtos = alertService.getAlertsByFlightNumber(flightNumber).stream()
-                .map(alertMapper::mapToDto)
+    // ✅ GET BY FLIGHT
+    @GetMapping("/{flightNumber}/alerts")
+    public ResponseEntity<List<AlertResponseDto>> getAlertsForFlight(@PathVariable String flightNumber) {
+
+        List<AlertResponseDto> dtos = alertService.getAlertsByFlightNumber(flightNumber).stream()
+                .map(alertMapper::toResponseDto)
                 .toList();
 
         if (dtos.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
+
         return ResponseEntity.ok(dtos);
     }
 }
