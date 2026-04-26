@@ -1,0 +1,5 @@
+ALTER TABLE alert
+DROP COLUMN severity;
+
+ALTER TABLE alert
+ADD severity VARCHAR(20) NOT NULL;

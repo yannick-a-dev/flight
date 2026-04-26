@@ -1,7 +1,3 @@
--- =========================
--- INDEXES PERFORMANCE
--- =========================
-
 -- TICKET
 CREATE INDEX idx_ticket_passenger ON ticket(passenger_id);
 CREATE INDEX idx_ticket_flight ON ticket(flight_id);
