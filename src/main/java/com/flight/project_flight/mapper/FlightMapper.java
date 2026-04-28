@@ -5,6 +5,7 @@ import com.flight.project_flight.dto.FlightDto;
 import com.flight.project_flight.dto.FlightResponseDto;
 import com.flight.project_flight.dto.ReservationResponseDto;
 import com.flight.project_flight.enums.FlightStatus;
+import com.flight.project_flight.exception.AirportNotFoundException;
 import com.flight.project_flight.models.Airport;
 import com.flight.project_flight.models.Alert;
 import com.flight.project_flight.models.Flight;
@@ -32,40 +33,13 @@ public class FlightMapper {
         this.airportRepository = airportRepository;
     }
 
-    public Flight toEntity(FlightDto flightDto) {
+    public Flight toEntity(FlightDto dto) {
         Flight flight = new Flight();
 
-        flight.setFlightNumber(flightDto.getFlightNumber());
-        flight.setDepartureTime(flightDto.getDepartureTime());
-        flight.setArrivalTime(flightDto.getArrivalTime());
-
-        flight.setDepartureAirport(findAirport(flightDto.getDepartureAirport()));
-        flight.setArrivalAirport(findAirport(flightDto.getArrivalAirport()));
-
-        flight.setStatus(FlightStatus.valueOf(flightDto.getStatus()));
-
-        // ✅ Reservations
-        if (flightDto.getReservations() != null) {
-            List<Reservation> reservations = flightDto.getReservations()
-                    .stream()
-                    .map(reservationMapper::toEntity)
-                    .collect(Collectors.toList());
-
-            reservations.forEach(r -> r.setFlight(flight)); // 🔥 important
-            flight.setReservations(reservations);
-        }
-
-        // ✅ Alerts
-        if (flightDto.getAlerts() != null) {
-            List<Alert> alerts = flightDto.getAlerts()
-                    .stream()
-                    .map(alertMapper::toEntity)
-                    .collect(Collectors.toList());
-
-            alerts.forEach(a -> a.setFlight(flight)); // 🔥 important
-            flight.setAlerts(alerts);
-        }
-
+        flight.setFlightNumber(dto.getFlightNumber());
+        flight.setDepartureTime(dto.getDepartureTime());
+        flight.setArrivalTime(dto.getArrivalTime());
+        flight.setStatus(FlightStatus.valueOf(dto.getStatus()));
         return flight;
     }
 
@@ -87,10 +61,9 @@ public class FlightMapper {
         return dto;
     }
 
-
     private Airport findAirport(String code) {
         return airportRepository.findByCode(code)
-                .orElseThrow(() -> new IllegalArgumentException("Airport not found: " + code));
+                .orElseThrow(() -> new AirportNotFoundException(code));
     }
 
     private String getCode(Airport airport) {

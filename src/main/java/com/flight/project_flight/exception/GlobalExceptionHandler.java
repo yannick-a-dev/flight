@@ -1,5 +1,6 @@
 package com.flight.project_flight.exception;
 
+import com.flight.project_flight.dto.ErrorResponse;
 import com.flight.project_flight.dto.TokenResponse;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -57,10 +58,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AirportNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleAirportNotFound(AirportNotFoundException ex) {
+    public ResponseEntity<ErrorResponse> handleAirportNotFound(AirportNotFoundException ex) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("message", ex.getMessage()));
+                .body(new ErrorResponse("AIRPORT_NOT_FOUND", ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

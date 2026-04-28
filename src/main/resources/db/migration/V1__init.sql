@@ -1,6 +1,3 @@
--- =========================
--- PASSENGER
--- =========================
 CREATE TABLE passenger (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -13,17 +10,11 @@ CREATE TABLE passenger (
     enabled BOOLEAN NOT NULL
 );
 
--- =========================
--- ROLES
--- =========================
 CREATE TABLE roles (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE
 );
 
--- =========================
--- AIRPORT
--- =========================
 CREATE TABLE airport (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -38,9 +29,6 @@ CREATE TABLE airport (
     timezone VARCHAR(100) NOT NULL DEFAULT 'Unknown'
 );
 
--- =========================
--- AIRLINES
--- =========================
 CREATE TABLE airlines (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
@@ -62,9 +50,6 @@ CREATE TABLE airline_airports (
         ON DELETE CASCADE
 );
 
--- =========================
--- FLIGHT
--- =========================
 CREATE TABLE flight (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     flight_number VARCHAR(50) UNIQUE,
@@ -81,9 +66,6 @@ CREATE TABLE flight (
         FOREIGN KEY (arrival_airport_id) REFERENCES airport(id)
 );
 
--- =========================
--- TICKET
--- =========================
 CREATE TABLE ticket (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticket_number VARCHAR(255) UNIQUE,
@@ -99,9 +81,6 @@ CREATE TABLE ticket (
         FOREIGN KEY (flight_id) REFERENCES flight(id)
 );
 
--- =========================
--- RESERVATION
--- =========================
 CREATE TABLE reservation (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     reservation_date DATETIME,
@@ -118,9 +97,6 @@ CREATE TABLE reservation (
         FOREIGN KEY (flight_id) REFERENCES flight(id)
 );
 
--- =========================
--- ALERT
--- =========================
 CREATE TABLE alert (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     message VARCHAR(255) NOT NULL,
@@ -141,9 +117,6 @@ CREATE TABLE alert (
         FOREIGN KEY (ticket_id) REFERENCES ticket(id)
 );
 
--- =========================
--- USER_ROLES
--- =========================
 CREATE TABLE user_roles (
     user_id BIGINT NOT NULL,
     role_id BIGINT NOT NULL,

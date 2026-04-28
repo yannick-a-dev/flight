@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.flight.project_flight.config.CustomLocalDateTimeDeserializer;
 import com.flight.project_flight.enums.FlightStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

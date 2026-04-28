@@ -3,6 +3,7 @@ package com.flight.project_flight.service;
 import com.flight.project_flight.dto.*;
 import com.flight.project_flight.enums.FlightStatus;
 import com.flight.project_flight.enums.Severity;
+import com.flight.project_flight.exception.AirportNotFoundException;
 import com.flight.project_flight.exception.FlightNotFoundException;
 import com.flight.project_flight.exception.InvalidFlightDataException;
 import com.flight.project_flight.mapper.AlertMapper;
@@ -51,9 +52,19 @@ public class FlightService {
             throw new IllegalArgumentException("Flight already exists");
         }
 
+        Airport departure = airportRepository.findByCode(dto.getDepartureAirport())
+                .orElseThrow(() -> new AirportNotFoundException(dto.getDepartureAirport()));
+
+        Airport arrival = airportRepository.findByCode(dto.getArrivalAirport())
+                .orElseThrow(() -> new AirportNotFoundException(dto.getArrivalAirport()));
+
         Flight flight = flightMapper.toEntity(dto);
+        flight.setDepartureAirport(departure);
+        flight.setArrivalAirport(arrival);
+
         return flightRepository.save(flight);
     }
+
     @Transactional
     public Flight updateFlight(String flightNumber, FlightDto dto) {
 

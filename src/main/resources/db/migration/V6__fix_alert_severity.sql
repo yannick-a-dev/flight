@@ -1,0 +1,1 @@
+ALTER TABLE alert MODIFY severity VARCHAR(20) NOT NULL;
