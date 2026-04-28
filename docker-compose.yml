@@ -18,19 +18,27 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"    # accès depuis host
-      - "29092:29092"  # accès interne aux conteneurs
+      - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
 
-
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+    healthcheck:
+      test: [ "CMD-SHELL", "cub kafka-ready -b localhost:29092 1 20" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
     networks:
       - flight-network
 
@@ -39,17 +47,17 @@ services:
     image: confluentinc/cp-schema-registry:7.8.0
     container_name: schema-registry
     depends_on:
-      - broker
+      broker:
+        condition: service_healthy
+    restart: on-failure
     ports:
       - "8081:8081"
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://broker:29092
-
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:29092
     networks:
       - flight-network
-
 
   # Backend Spring Boot
   flight-backend:
@@ -58,10 +66,14 @@ services:
       dockerfile: Dockerfile
     container_name: flight-backend
     depends_on:
-      - broker
-      - schema-registry
-      - mysql-flight
-      - mailhog
+      broker:
+        condition: service_healthy
+      schema-registry:
+        condition: service_started
+      mysql-flight:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
     ports:
       - "8083:8080"
     environment:
@@ -88,6 +100,12 @@ services:
       MYSQL_PASSWORD: password
     ports:
       - "3306:3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-ppassword" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
     networks:
       - flight-network
 
