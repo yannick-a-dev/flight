@@ -40,16 +40,8 @@ public class PassengerController {
 
     @PostMapping(consumes = "application/json")
     public ResponseEntity<Passenger> createPassenger(@RequestBody PassengerDTO passengerDTO) {
-        if (passengerDTO == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        try {
-            Passenger savedPassenger = passengerService.registerPassenger(passengerDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedPassenger);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        Passenger savedPassenger = passengerService.registerPassenger(passengerDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedPassenger);
     }
 
     @GetMapping

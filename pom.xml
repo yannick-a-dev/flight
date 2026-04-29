@@ -189,6 +189,14 @@
 			<groupId>org.hibernate.validator</groupId>
 			<artifactId>hibernate-validator</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>
+		</dependency>
 	</dependencies>
     <repositories>
         <repository>
@@ -250,6 +258,26 @@
   					</configuration>
 				 </execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>10.20.1</version>
+
+				<configuration>
+					<url>jdbc:mysql://localhost:3306/flights</url>
+					<user>user</user>
+					<password>password</password>
+					<driver>com.mysql.cj.jdbc.Driver</driver>
+				</configuration>
+
+				<dependencies>
+					<dependency>
+						<groupId>org.flywaydb</groupId>
+						<artifactId>flyway-mysql</artifactId>
+						<version>10.20.1</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 		</plugins>
 		<resources>

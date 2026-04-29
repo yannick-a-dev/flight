@@ -16,11 +16,14 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
 
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
@@ -41,13 +44,13 @@ spring:
           writetimeout: 5000
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:29092
     producer:
       client-id: flight-management-service-producer
       retries: 5
       acks: all
       retry-backoff-ms: 100
-      key-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       properties:
         max.request.size: 200000000

@@ -27,11 +27,18 @@ public class Reservation {
     private BigDecimal price;
 
     @ManyToOne
-    @JoinColumn(name = "passenger_id")
+    @JoinColumn(
+            name = "passenger_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_reservation_passenger")
+    )
     private Passenger passenger;
 
     @ManyToOne
-    @JoinColumn(name = "flight_id")
+    @JoinColumn(
+            name = "flight_id",
+            foreignKey = @ForeignKey(name = "fk_reservation_flight")
+    )
     private Flight flight;
 
     public Long getId() {

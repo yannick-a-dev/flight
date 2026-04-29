@@ -78,32 +78,22 @@ public class PassengerService implements UserDetailsService {
 
     @Transactional
     public Passenger registerPassenger(PassengerDTO passengerDTO) {
-
-        // 1️⃣ Vérification unicité email
         checkEmailUniqueness(passengerDTO);
-
-        // 2️⃣ Encodage mot de passe
         String hashedPassword = encodePassword(passengerDTO.getPassword());
-
-        // 3️⃣ Création Passenger
         Passenger passenger = createPassenger(passengerDTO, hashedPassword);
-
-        // 4️⃣ Mapping alerts si présent
         if (passengerDTO.getAlerts() != null) {
             passenger.setAlerts(passengerDTO.getAlerts().stream()
                     .map(alertDto -> alertMapper.toEntity(alertDto))
                     .collect(Collectors.toList()));
         }
-
-        // 5️⃣ Persist
         return passengerRepository.save(passenger);
     }
 
-
-    private void checkEmailUniqueness(PassengerDTO passengerDTO) {
-        if (passengerDTO.getId() != null && passengerRepository.existsByEmailAndIdNot(passengerDTO.getEmail(), passengerDTO.getId())) {
-            throw new EmailAlreadyExistsException("Passenger with this email already exists");
-        } else if (passengerDTO.getId() == null && passengerRepository.existsByEmail(passengerDTO.getEmail())) {
+    private void checkEmailUniqueness(PassengerDTO dto) {
+        boolean exists = (dto.getId() == null)
+                ? passengerRepository.existsByEmail(dto.getEmail())
+                : passengerRepository.existsByEmailAndIdNot(dto.getEmail(), dto.getId());
+        if (exists) {
             throw new EmailAlreadyExistsException("Passenger with this email already exists");
         }
     }

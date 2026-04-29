@@ -17,6 +17,9 @@ import java.util.List;
 public class Flight {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String flightNumber;
 
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
@@ -25,8 +28,13 @@ public class Flight {
     @JsonDeserialize(using = CustomLocalDateTimeDeserializer.class)
     private LocalDateTime arrivalTime;
 
-    private String departureAirport;
-    private String arrivalAirport;
+    @ManyToOne
+    @JoinColumn(name="departure_airport_id")
+    private Airport departureAirport;
+
+    @ManyToOne
+    @JoinColumn(name="arrival_airport_id")
+    private Airport arrivalAirport;
 
     @Enumerated(EnumType.STRING)
     private FlightStatus status;
@@ -61,7 +69,14 @@ public class Flight {
         reservation.setFlight(null);
     }
 
-    // ---------- GETTERS / SETTERS ----------
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getFlightNumber() {
         return flightNumber;
     }
@@ -86,19 +101,19 @@ public class Flight {
         this.arrivalTime = arrivalTime;
     }
 
-    public String getDepartureAirport() {
+    public Airport getDepartureAirport() {
         return departureAirport;
     }
 
-    public void setDepartureAirport(String departureAirport) {
+    public void setDepartureAirport(Airport departureAirport) {
         this.departureAirport = departureAirport;
     }
 
-    public String getArrivalAirport() {
+    public Airport getArrivalAirport() {
         return arrivalAirport;
     }
 
-    public void setArrivalAirport(String arrivalAirport) {
+    public void setArrivalAirport(Airport arrivalAirport) {
         this.arrivalAirport = arrivalAirport;
     }
 
@@ -114,7 +129,15 @@ public class Flight {
         return reservations;
     }
 
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
+    }
+
     public List<Alert> getAlerts() {
         return alerts;
+    }
+
+    public void setAlerts(List<Alert> alerts) {
+        this.alerts = alerts;
     }
 }

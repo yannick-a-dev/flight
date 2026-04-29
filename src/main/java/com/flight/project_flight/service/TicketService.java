@@ -29,8 +29,7 @@ public class TicketService {
         if (ticket.getPassenger() != null && ticket.getFlight() != null) {
             // Assurez-vous que les passagers et vols existent
             Passenger passenger = passengerRepository.findById(ticket.getPassenger().getId()).orElseThrow(() -> new IllegalArgumentException("Passenger not found"));
-            Flight flight = flightRepository.findById(ticket.getFlight().getFlightNumber()).orElseThrow(() -> new IllegalArgumentException("Flight not found"));
-
+            Flight flight = flightRepository.findById(ticket.getFlight().getId()).orElseThrow(() -> new IllegalArgumentException("Flight not found"));
             ticket.setPassenger(passenger);
             ticket.setFlight(flight);
         }

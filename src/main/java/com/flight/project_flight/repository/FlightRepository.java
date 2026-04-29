@@ -10,12 +10,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 @Repository
-public interface FlightRepository extends JpaRepository<Flight, String> {
+public interface FlightRepository extends JpaRepository<Flight, Long> {
     @Query("SELECT f FROM Flight f WHERE f.flightNumber = :flightNumber")
     Optional<Flight> findByFlightNumber(@Param("flightNumber") String flightNumber);
-
     @Query("SELECT r.flight FROM Reservation r WHERE r.passenger.id = :passengerId")
     List<Flight> findFlightsByPassengerId(@Param("passengerId") Long passengerId);
-
-    List<Flight> findByDepartureAirportOrArrivalAirport(String departureCode, String arrivalCode);
+    List<Flight> findByDepartureAirport_CodeOrArrivalAirport_Code(String dep, String arr);
 }

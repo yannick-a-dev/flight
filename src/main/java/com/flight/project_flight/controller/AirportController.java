@@ -3,6 +3,7 @@ package com.flight.project_flight.controller;
 import com.flight.project_flight.dto.AirlineDTO;
 import com.flight.project_flight.dto.AirportDTO;
 import com.flight.project_flight.dto.FlightDto;
+import com.flight.project_flight.dto.FlightResponseDto;
 import com.flight.project_flight.exception.AirportCodeAlreadyExistsException;
 import com.flight.project_flight.mapper.AirportMapper;
 import com.flight.project_flight.models.Airport;
@@ -94,11 +95,13 @@ public class AirportController {
     }
 
     @GetMapping("/{id}/flights")
-    public ResponseEntity<List<FlightDto>> getFlightsByAirport(@PathVariable String id) {
+    public ResponseEntity<List<FlightResponseDto>> getFlightsByAirport(@PathVariable String id) {
+
         if (!id.matches("\\d+")) {
             return ResponseEntity.badRequest().build();
         }
-        List<FlightDto> flights = flightService.getFlightsByAirport(Long.valueOf(id));
+        List<FlightResponseDto> flights =
+                flightService.getFlightsByAirport(Long.valueOf(id));
         return ResponseEntity.ok(flights);
     }
 

@@ -52,11 +52,11 @@ public class Airport {
     private Boolean isActive = false;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "terminal_info", nullable = false)
     private String terminalInfo = "No information available";
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "timezone", nullable = false)
     private String timezone = "Unknown";
 
     @JsonIgnore
@@ -66,7 +66,7 @@ public class Airport {
     @JsonIgnore
     @OneToMany(mappedBy = "arrivalAirport", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Flight> arrivalFlights = new HashSet<>();
-
+    @JsonIgnore
     @ManyToMany(mappedBy = "airports")
     private Set<Airline> airlines = new HashSet<>();
 
