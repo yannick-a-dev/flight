@@ -11,8 +11,6 @@ public class FlightResponseDto {
     private String departureAirport;
     private String arrivalAirport;
     private String status;
-    private List<ReservationResponseDto> reservations;
-    private List<AlertResponseDto> alerts;
 
     public Long getId() {
         return id;
@@ -70,19 +68,4 @@ public class FlightResponseDto {
         this.status = status;
     }
 
-    public List<ReservationResponseDto> getReservations() {
-        return reservations;
-    }
-
-    public void setReservations(List<ReservationResponseDto> reservations) {
-        this.reservations = reservations;
-    }
-
-    public List<AlertResponseDto> getAlerts() {
-        return alerts;
-    }
-
-    public void setAlerts(List<AlertResponseDto> alerts) {
-        this.alerts = alerts;
-    }
 }

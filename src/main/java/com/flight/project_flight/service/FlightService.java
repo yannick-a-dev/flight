@@ -158,10 +158,6 @@ public class FlightService {
         dto.setDepartureAirport(getCode(flight.getDepartureAirport()));
         dto.setArrivalAirport(getCode(flight.getArrivalAirport()));
         dto.setStatus(flight.getStatus().name());
-
-        dto.setReservations(reservations);
-        dto.setAlerts(alerts);
-
         return dto;
     }
 

@@ -44,7 +44,7 @@ spring:
           writetimeout: 5000
 
   kafka:
-    bootstrap-servers: broker:29092
+    bootstrap-servers: localhost:29092
     producer:
       client-id: flight-management-service-producer
       retries: 5
@@ -54,7 +54,7 @@ spring:
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       properties:
         max.request.size: 200000000
-        schema.registry.url: http://schema-registry:8081
+        schema.registry.url: http://localhost:8081
         request.timeout.ms: 120000
         metadata.fetch.timeout.ms: 120000
         metric.reporters: ""

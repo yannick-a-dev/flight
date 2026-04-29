@@ -53,11 +53,6 @@ public class FlightMapper {
         dto.setDepartureAirport(getCode(flight.getDepartureAirport()));
         dto.setArrivalAirport(getCode(flight.getArrivalAirport()));
         dto.setStatus(flight.getStatus().name());
-
-        // ✅ plus de duplication
-        dto.setReservations(mapReservations(flight.getReservations()));
-        dto.setAlerts(mapAlerts(flight.getAlerts()));
-
         return dto;
     }
 
