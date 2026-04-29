@@ -29,7 +29,7 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
 
   mail:
-    host: mailhog
+    host: localhost
     port: 1025
     username: ""
     password: ""

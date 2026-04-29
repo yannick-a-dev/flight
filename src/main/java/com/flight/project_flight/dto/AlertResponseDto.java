@@ -3,10 +3,23 @@ package com.flight.project_flight.dto;
 import java.time.LocalDateTime;
 
 public class AlertResponseDto {
+    private Long id;
+
     private String message;
     private LocalDateTime alertDate;
     private String severity;
+
     private Long passengerId;
+
+    private String flightNumber;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getMessage() {
         return message;
@@ -38,5 +51,13 @@ public class AlertResponseDto {
 
     public void setPassengerId(Long passengerId) {
         this.passengerId = passengerId;
+    }
+
+    public String getFlightNumber() {
+        return flightNumber;
+    }
+
+    public void setFlightNumber(String flightNumber) {
+        this.flightNumber = flightNumber;
     }
 }

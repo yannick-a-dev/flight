@@ -48,12 +48,17 @@ public class AlertMapper {
 
         AlertResponseDto dto = new AlertResponseDto();
 
+        dto.setId(alert.getId());
         dto.setMessage(alert.getMessage());
         dto.setAlertDate(alert.getAlertDate());
         dto.setSeverity(alert.getSeverity() != null ? alert.getSeverity().name() : null);
 
         if (alert.getPassenger() != null) {
             dto.setPassengerId(alert.getPassenger().getId());
+        }
+
+        if (alert.getFlight() != null) {
+            dto.setFlightNumber(alert.getFlight().getFlightNumber());
         }
 
         return dto;
